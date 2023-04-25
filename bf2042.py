@@ -1,0 +1,536 @@
+import base64
+import hashlib
+import os
+import random
+from decimal import Decimal
+from io import BytesIO
+import requests
+import qrcode
+import hoshino
+from PIL import Image, ImageDraw, ImageFont
+
+classesList = {
+    "Mackay": "麦凯",
+    "Angel": "天使",
+    "Falck": "法尔克",
+    "Paik": "白智秀",
+    "Sundance": "日舞",
+    "Dozer": "推土机",
+    "Rao": "拉奥",
+    "Lis": "莉丝",
+    "Irish": "爱尔兰佬",
+    "Crawford": "克劳福德",
+    "Boris": "鲍里斯",
+    "Zain": "扎因",
+    "Casper": "卡斯帕",
+    "Blasco": "布拉斯科",
+}
+classes_type_list = {
+    "Assault": "突击兵",
+    "Support": "支援兵",
+    "Recon": "侦察兵",
+    "Engineer": "工程兵"
+}
+
+'''2042图片战绩生成'''
+filepath = os.path.dirname(__file__).replace("\\", "/")
+
+
+def bf_2042_gen_pic(data, platform, bot, ev):
+    # 检查玩家是否存在
+    if "userId" not in data:
+        mes = "未找到该玩家"
+        return mes
+    # 1.创建黑色板块 1920*1080
+    new_img = Image.new('RGBA', (1920, 1080), (0, 0, 0, 1000))
+    # 2.获取头像图片 150*150
+    avatar_url = data["avatar"]
+    avatar = Image.open(filepath + "/img/class_icon/No-Pats.png").convert('RGBA')
+    try:
+        if requests.get(avatar_url).status_code == 200:
+            res = BytesIO(requests.get(avatar_url).content)
+            avatar = Image.open(res)
+    except Exception as e:
+        print(e)
+    avatar = png_resize(avatar, new_width=145, new_height=145)
+    avatar = circle_corner(avatar, 10)
+    # 3.获取背景 并 模糊
+    # 判断是否为bot管理员
+    if ev.user_id == hoshino.config.SUPERUSERS[0]:
+        img = get_favorite_image()
+    else:
+        bg_name = os.listdir(filepath + "/img/bg/")
+        index = random.randint(0, len(bg_name) - 1)
+        img = Image.open(filepath + f"/img/bg/{bg_name[index]}").convert('RGBA').resize((1920, 1080))
+    # img_filter = img.filter(ImageFilter.GaussianBlur(radius=3))
+    # 4.拼合板块+背景+logo
+    new_img.paste(img, (0, 0))
+
+    if ev.user_id == hoshino.config.SUPERUSERS[0]:
+        logo = get_user_avatar(ev.user_id)
+    else:
+        logo = Image.open(filepath + "/img/bf2042_logo/bf2042logo.png").convert('RGBA')
+    logo = png_resize(logo, new_width=145, new_height=145)
+    logo = circle_corner(logo, 10)
+    new_img = image_paste(logo, new_img, (1750, 30))
+    # 5.绘制头像框 (x1,y1,x2,y2)
+    # x2 = x1+width+img_width+width
+    # y2 = y1+width+img_height+width
+    draw = ImageDraw.Draw(new_img)
+    new_img = draw_rect(new_img, (25, 25, 768, 180), 10, fill=(0, 0, 0, 150))
+    # 6添加头像
+    new_img = image_paste(avatar, new_img, (30, 30))
+    # 7.添加用户信息文字
+
+    # # 等级计算
+    # xp = data["XP"][0]["total"]
+    # unit = 93944
+    # level = int((xp / unit) + 0.55)
+    # color = 'white'
+    # if int((xp / 93944) + 0.55) > 0:
+    #     level = ('S' + str(level - 99))
+    #     color = '#FF3333'
+
+    # 载入字体
+    en_text_font = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 36)
+    ch_text_font = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 36)
+    # 获取用化名
+    player_name = data["userName"]
+    plat = Image.open(filepath + "/img/platform/origin.png").convert("RGBA").resize((40, 40))
+    if platform == "pc":
+        plat = Image.open(filepath + "/img/platform/origin.png").convert("RGBA").resize((40, 40))
+    elif platform == "psn":
+        plat = Image.open(filepath + "/img/platform/playstation.png").convert("RGBA").resize((40, 40))
+    elif platform == "xbl":
+        plat = Image.open(filepath + "/img/platform/xbox.png").convert("RGBA").resize((40, 40))
+    draw.text((208, 33), '玩家：', fill='white', font=ch_text_font)
+    draw.text((308, 30), f'{player_name}', fill='white', font=en_text_font)
+    # 游玩平台
+    # draw.rectangle([208, 120, 248, 160], fill="black")
+    # r, g, b, alpha = plat.split()
+    # new_img.paste(plat, (208, 120), mask=alpha)
+    new_img = image_paste(plat, new_img, (208, 120))
+    draw.text((260, 120), '游玩时长：', fill='white', font=ch_text_font)
+    time_played = data["timePlayed"]
+    if ',' in time_played:
+        times = time_played.split(',')
+        if "days" in times[0]:
+            times_1 = int(times[0].replace("days", "").strip()) * 24
+        else:
+            times_1 = int(times[0].replace("day", "").strip()) * 24
+        times_2 = times[1].split(':')
+        time_part2 = int(times_2[0]) + Decimal(int(times_2[1]) / 60).quantize(Decimal("0.00"))
+        time_played = str(times_1 + time_part2)
+    else:
+        time_part2 = Decimal(int(time_played.split(':')[1]) / 60).quantize(Decimal("0.00"))
+        time_played = int(time_played.split(':')[0]) + time_part2
+    draw.text((430, 118), f'{time_played} H', fill='white', font=en_text_font)
+    # 8.绘制最佳专家外框
+    # 获取兵种图标
+    best_class = sorted(data["classes"], key=lambda k: k['kills'], reverse=True)[0]
+    # 专家名称
+    best_specialist = best_class["characterName"]
+    # 专家击杀数
+    best_specialist_kills = best_class["kills"]
+    class_type = best_class["className"]
+    # 专家图标
+    class_icon_path = get_class_type(class_type)
+    class_icon = Image.open(class_icon_path).convert('RGBA')
+    # 图像缩放
+    class_icon = class_icon.resize((90, 90))
+    # class_icon = png_resize(class_icon, new_width=90, new_height=90)
+    # (300, 360)
+    # 绘制最佳专家
+    new_img = draw_rect(new_img, (768 + 25, 25, 1318, 180), 10, fill=(0, 0, 0, 150))
+    draw.text((815, 55), '最 佳\n专 家', fill='lightgreen', font=ch_text_font)
+    # draw.rectangle([930, 35, 1020, 125], fill="black")
+    # new_img.paste(class_icon, (930, 35))
+    new_img = image_paste(class_icon, new_img, (930, 35))
+    draw.text((920, 130), f'{classes_type_list[class_type]}', fill='skyblue', font=ch_text_font)
+    draw.text((1050, 40), f'{classesList[best_specialist]}', fill='white', font=ch_text_font)
+    draw.text((1050, 115), f'击杀数：{best_specialist_kills}', fill='white', font=ch_text_font)
+
+    # 9.MVP/最佳小队
+    # 绘制最佳小队/MVP
+    new_img = draw_rect(new_img, (1318 + 25, 25, 1920 - 195, 180), 10, fill=(0, 0, 0, 150))
+    # 游玩场数
+    matches = data["matchesPlayed"]
+    # mvp
+    mvp = "MVP：" + str(data["mvp"])
+    # 最佳小队
+    best_squad = "最佳小队：" + str(data["bestSquad"])
+    best_show = random.choice((mvp, best_squad))
+    ch_text_font2 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 36)
+    draw.text((1368, 50), f'游玩场数: {matches}', fill='white', font=ch_text_font2)
+    draw.text((1368, 111), f'{best_show}', fill='white', font=ch_text_font2)
+    # 10.绘制生涯框
+    new_img = draw_rect(new_img, (25, 205, 1920 - 25, 455), 10, fill=(0, 0, 0, 150))
+    ch_text_font3 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
+    en_text_font3 = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 36)
+    kd = data["killDeath"]
+    real_kd = data["infantryKillDeath"]
+    kills = data["kills"]
+    kpm = data["killsPerMinute"]
+    k_per_match = data["killsPerMatch"]
+    hs = data["headshots"]
+    acc = data["accuracy"]
+    win = data["winPercent"]
+    human_per = data["humanPrecentage"]
+    AI_kill = kills - int(kills * float(human_per.replace("%", "")) / 100 + 0.55)
+    deaths = data["deaths"]
+    revives = data["revives"]
+    eme = data["enemiesSpotted"]
+    # 数据1
+    draw.text((150, 235), f'K/D： {kd}', fill='white', font=ch_text_font3)
+    draw.text((150, 280), f'真实 K/D： {real_kd}', fill='white', font=ch_text_font3)
+    draw.text((150, 325), f'击杀： {kills}', fill='white', font=ch_text_font3)
+    draw.text((150, 370), f'死亡数： {deaths}', fill='white', font=ch_text_font3)
+
+    # 数据2
+    draw.text((550, 235), f'KPM： {kpm}', fill='white', font=ch_text_font3)
+    draw.text((550, 280), f'爆头率： {hs}', fill='white', font=ch_text_font3)
+    draw.text((550, 325), f'命中率： {acc}', fill='white', font=ch_text_font3)
+    draw.text((550, 370), f'胜率： {win}', fill='white', font=ch_text_font3)
+
+    # 数据3
+    draw.text((950, 235), f'AI击杀： {AI_kill}', fill='white', font=ch_text_font3)
+    draw.text((950, 280), f'场均击杀： {k_per_match}', fill='white', font=ch_text_font3)
+    draw.text((950, 325), f'急救数： {revives}', fill='white', font=ch_text_font3)
+    draw.text((950, 370), f'发现敌人数： {eme}', fill='white', font=ch_text_font3)
+
+    # 数据4 BF TRACKER个人主页
+    qr_img = qr_code_gen(player_name, platform)
+    new_img.paste(qr_img, (1550, 228))
+    draw.text((1300, 290), "BATTLEFIELD\n    TRACKER", fill="lightgreen", font=en_text_font3)
+    # 11.绘制第三部分 TOP4武器/载具 947.5-12.5
+    new_img = draw_rect(new_img, (25, 480, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))
+    ch_text_font4 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
+    en_text_font4 = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 32)
+
+    top_weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
+
+    # 1
+    # 修饰线条
+    draw.line([45, 505, 45, 585], fill="#CCFF00", width=5, joint=None)
+    # draw.rectangle([50, 505, 210, 585], fill="black")
+    new_img = image_paste(get_top_object_img(top_weapon_list[0]).resize((160, 80)), new_img, (50, 505))
+    draw.text((230, 500), f'{top_weapon_list[0]["weaponName"]}', fill="white", font=en_text_font4)
+    draw.text((230, 545), f'击杀：{top_weapon_list[0]["kills"]}', fill="white", font=ch_text_font4)
+
+    draw.text((450, 500), f'爆头率：{top_weapon_list[0]["headshots"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 545), f'命中率：{top_weapon_list[0]["accuracy"]}', fill="white", font=ch_text_font4)
+
+    draw.text((730, 500), f'KPM：{top_weapon_list[0]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 545), f'时长：{int(int(top_weapon_list[0]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
+              font=ch_text_font4)
+    # 2
+    # 修饰线条
+    draw.line([45, 615, 45, 695], fill="#CCFF00", width=5, joint=None)
+    # draw.rectangle([50, 615, 210, 695], fill="black")
+    new_img = image_paste(get_top_object_img(top_weapon_list[1]).resize((160, 80)), new_img, (50, 615))
+    draw.text((230, 610), f'{top_weapon_list[1]["weaponName"]}', fill="white", font=en_text_font4)
+    draw.text((230, 655), f'击杀：{top_weapon_list[1]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 610), f'爆头率：{top_weapon_list[1]["headshots"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 655), f'命中率：{top_weapon_list[1]["accuracy"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 610), f'KPM：{top_weapon_list[1]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 655), f'时长：{int(int(top_weapon_list[1]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
+              font=ch_text_font4)
+    # 3
+    # 修饰线条
+    draw.line([45, 725, 45, 805], fill="#CCFF00", width=5, joint=None)
+    # draw.rectangle([50, 725, 210, 805], fill="black")
+    new_img = image_paste(get_top_object_img(top_weapon_list[2]).resize((160, 80)), new_img, (50, 725))
+    draw.text((230, 720), f'{top_weapon_list[2]["weaponName"]}', fill="white", font=en_text_font4)
+    draw.text((230, 765), f'击杀：{top_weapon_list[2]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 720), f'爆头率：{top_weapon_list[2]["headshots"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 765), f'命中率：{top_weapon_list[2]["accuracy"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 720), f'KPM：{top_weapon_list[2]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 765), f'时长：{int(int(top_weapon_list[2]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
+              font=ch_text_font4)
+    # 4
+    # 修饰线条
+    draw.line([45, 845, 45, 925], fill="#66CCFF", width=5, joint=None)
+    # draw.rectangle([50, 845, 210, 925], fill="black")
+    new_img = image_paste(get_top_object_img(top_weapon_list[3]).resize((160, 80)), new_img, (50, 845))
+    draw.text((230, 840), f'{top_weapon_list[3]["weaponName"]}', fill="white", font=en_text_font4)
+    draw.text((230, 885), f'击杀：{top_weapon_list[3]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 840), f'爆头率：{top_weapon_list[3]["headshots"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 885), f'命中率：{top_weapon_list[3]["accuracy"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 840), f'KPM：{top_weapon_list[3]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 885), f'时长：{int(int(top_weapon_list[3]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
+              font=ch_text_font4)
+    # 5
+    # 修饰线条
+    draw.line([45, 955, 45, 1035], fill="#66CCFF", width=5, joint=None)
+    # draw.rectangle([50, 955, 210, 1035], fill="black")
+    new_img = image_paste(get_top_object_img(top_weapon_list[4]).resize((160, 80)), new_img, (50, 955))
+    draw.text((230, 950), f'{top_weapon_list[4]["weaponName"]}', fill="white", font=en_text_font4)
+    draw.text((230, 995), f'击杀：{top_weapon_list[4]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 950), f'爆头率：{top_weapon_list[4]["headshots"]}', fill="white", font=ch_text_font4)
+    draw.text((450, 995), f'命中率：{top_weapon_list[4]["accuracy"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 950), f'KPM：{top_weapon_list[4]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((730, 995), f'时长：{int(int(top_weapon_list[4]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
+              font=ch_text_font4)
+
+    # 分割线
+    draw.line([950, 505, 950, 1030], fill="white", width=5, joint=None)
+    # 载具部分
+    top_vehicles_list = sorted(data["vehicles"], key=lambda k: k['kills'], reverse=True)
+    # 1
+    # 绘制修饰线条
+    draw.line([975, 505, 975, 585], fill="#CCFF00", width=5, joint=None)
+    # draw.rectangle([980, 505, 1295, 585], fill="black")
+    new_img = image_paste(get_top_object_img(top_vehicles_list[0]).resize((320, 80)), new_img, (980, 505))
+    draw.text((1325, 500), f'{top_vehicles_list[0]["vehicleName"]}', fill="white", font=en_text_font4)
+    draw.text((1325, 545), f'击杀：{top_vehicles_list[0]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 500), f'KPM：{top_vehicles_list[0]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 545), f'摧毁数：{top_vehicles_list[0]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
+    # draw.text((1630, 545), f'时长：{top1weapon_vehicles_time_in}h', fill="white", font=ch_text_font4)
+    # 2
+    # 绘制修饰线条
+    draw.line([975, 615, 975, 695], fill="#CCFF00", width=5, joint=None)
+    # draw.rectangle([980, 615, 1295, 695], fill="black")
+    new_img = image_paste(get_top_object_img(top_vehicles_list[1]).resize((320, 80)), new_img, (980, 615))
+    draw.text((1325, 610), f'{top_vehicles_list[1]["vehicleName"]}', fill="white", font=en_text_font4)
+    draw.text((1325, 655), f'击杀：{top_vehicles_list[1]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 610), f'KPM：{top_vehicles_list[1]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 655), f'摧毁数：{top_vehicles_list[1]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
+    # 3
+    # 绘制修饰线条
+    draw.line([975, 725, 975, 805], fill="#CCFF00", width=5, joint=None)
+    # draw.rectangle([980, 725, 1295, 805], fill="black")
+    new_img = image_paste(get_top_object_img(top_vehicles_list[2]).resize((320, 80)), new_img, (980, 725))
+    draw.text((1325, 720), f'{top_vehicles_list[2]["vehicleName"]}', fill="white", font=en_text_font4)
+    draw.text((1325, 765), f'击杀：{top_vehicles_list[2]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 720), f'KPM：{top_vehicles_list[2]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 765), f'摧毁数：{top_vehicles_list[2]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
+    # 4
+    # 绘制修饰线条
+    draw.line([975, 845, 975, 925], fill="#66CCFF", width=5, joint=None)
+    # draw.rectangle([980, 845, 1295, 925], fill="black")
+    new_img = image_paste(get_top_object_img(top_vehicles_list[3]).resize((320, 80)), new_img, (980, 845))
+    draw.text((1325, 840), f'{top_vehicles_list[3]["vehicleName"]}', fill="white", font=en_text_font4)
+    draw.text((1325, 885), f'击杀：{top_vehicles_list[3]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 840), f'KPM：{top_vehicles_list[3]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 885), f'摧毁数：{top_vehicles_list[3]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
+    # 5
+    # 绘制修饰线条
+    draw.line([975, 955, 975, 1035], fill="#66CCFF", width=5, joint=None)
+    # draw.rectangle([980, 955, 1295, 1035], fill="black")
+    new_img = image_paste(get_top_object_img(top_vehicles_list[4]).resize((320, 80)), new_img, (980, 955))
+    draw.text((1325, 950), f'{top_vehicles_list[4]["vehicleName"]}', fill="white", font=en_text_font4)
+    draw.text((1325, 995), f'击杀：{top_vehicles_list[4]["kills"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 950), f'KPM：{top_vehicles_list[4]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+    draw.text((1630, 995), f'摧毁数：{top_vehicles_list[4]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
+
+    # 显示图片
+    # new_img.show()
+    b_io = BytesIO()
+    new_img.save(b_io, format="PNG")
+    base64_str = 'base64://' + base64.b64encode(b_io.getvalue()).decode()
+    return base64_str
+
+
+# 圆角遮罩处理
+def draw_rect(img, pos, radius, **kwargs):
+    transp = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    alpha_draw = ImageDraw.Draw(transp, "RGBA")
+    alpha_draw.rounded_rectangle(pos, radius, **kwargs)
+    img.paste(Image.alpha_composite(img, transp))
+    return img
+
+
+def circle_corner(img, radii):
+    """
+    半透明圆角处理
+    :param img: 要修改的文件
+    :param radii: 圆角弧度
+    :return: 返回修改过的文件
+    """
+    circle = Image.new('L', (radii * 2, radii * 2), 0)  # 创建黑色方形
+    draw = ImageDraw.Draw(circle)
+    draw.ellipse((0, 0, radii * 2, radii * 2), fill=255)  # 黑色方形内切白色圆形
+
+    img = img.convert("RGBA")
+    w, h = img.size
+
+    # 创建一个alpha层，存放四个圆角，使用透明度切除圆角外的图片
+    alpha = Image.new('L', img.size, 255)
+    alpha.paste(circle.crop((0, 0, radii, radii)), (0, 0))  # 左上角
+    alpha.paste(circle.crop((radii, 0, radii * 2, radii)),
+                (w - radii, 0))  # 右上角
+    alpha.paste(circle.crop((radii, radii, radii * 2, radii * 2)),
+                (w - radii, h - radii))  # 右下角
+    alpha.paste(circle.crop((0, radii, radii, radii * 2)),
+                (0, h - radii))  # 左下角
+    img.putalpha(alpha)  # 白色区域透明可见，黑色区域不可见
+
+    # 添加圆角边框
+    draw = ImageDraw.Draw(img)
+    draw.rounded_rectangle(img.getbbox(), outline="white", width=3, radius=radii)
+    return img
+
+
+def get_class_type(class_type):
+    """
+    获取专家类型
+    :param class_type: 专家类型
+    :return: 返回对应的图标路径
+    """
+    icon_path = filepath + "/img/class_icon/No-Pats.png"
+    if class_type == 'Assault':
+        icon_path = filepath + "/img/class_icon/ui/Assault_Icon_small.png"
+    elif class_type == 'Support':
+        icon_path = filepath + "/img/class_icon/ui/Support_Icon_small.png"
+    elif class_type == 'Recon':
+        icon_path = filepath + "/img/class_icon/ui/Recon_Icon_small.png"
+    elif class_type == 'Engineer':
+        icon_path = filepath + "/img/class_icon/ui/Engineer_Icon_small.png"
+    return icon_path
+
+
+def png_resize(source_file, new_width=0, new_height=0, resample="ANTIALIAS", ref_file=''):
+    """
+    PNG缩放透明度处理
+    :param source_file: 源文件（Image.open()）
+    :param new_width: 设置的宽度
+    :param new_height: 设置的高度
+    :param resample:抗锯齿
+    :param ref_file:参考文件
+    :return:
+    """
+    img = source_file
+    img = img.convert("RGBA")
+    width, height = img.size
+
+    if ref_file != '':
+        imgRef = Image.open(ref_file)
+        new_width, new_height = imgRef.size
+    else:
+        if new_height == 0:
+            new_height = new_width * width / height
+
+    # img.load()
+    bands = img.split()
+    if resample == "NEAREST":
+        resample = Image.NEAREST
+    else:
+        if resample == "BILINEAR":
+            resample = Image.BILINEAR
+        else:
+            if resample == "BICUBIC":
+                resample = Image.BICUBIC
+            else:
+                if resample == "ANTIALIAS":
+                    resample = Image.ANTIALIAS
+    bands = [b.resize((new_width, new_height), resample) for b in bands]
+    ResizedFile = Image.merge('RGBA', bands)
+    # return
+    return ResizedFile
+
+
+# 获取图片
+def get_top_object_img(object_data):
+    """
+    获取对应物品图标
+    :param object_data: 物品数据
+    :return: 图标
+    """
+    img_url = object_data["image"]
+    img = Image.open(filepath + "/img/object_icon/default.png").convert('RGBA')
+    # object_name = "default"
+    path = filepath + "/img/object_icon/"
+    try:
+        obj_name = os.listdir(path)
+        if "weaponName" in object_data:
+            object_name = object_data["weaponName"]
+            if object_name in str(obj_name):
+                img = Image.open(f"{path}{object_name}.png").convert('RGBA')
+            else:
+                img = Image.open(BytesIO(requests.get(img_url).content)).convert('RGBA')
+                img.save(filepath + f"/img/object_icon/{object_name}.png")
+        elif "vehicleName" in object_data:
+            object_name = object_data["vehicleName"]
+            if object_name in str(obj_name):
+                img = Image.open(f"{path}{object_name}.png").convert('RGBA')
+            else:
+                img = Image.open(BytesIO(requests.get(img_url).content)).convert('RGBA')
+                img.save(filepath + f"/img/object_icon/{object_name}.png")
+    except Exception as err:
+        print(err)
+    return img
+
+
+def qr_code_gen(player, platform):
+    """
+    version ：QR code 的版次，可以设置 1 ～ 40 的版次。
+    error_correction ：容错率，可选 7%、15%、25%、30%，参数如下 ：
+    qrcode.constants.ERROR_CORRECT_L ：7%
+    qrcode.constants.ERROR_CORRECT_M ：15%（预设）
+    qrcode.constants.ERROR_CORRECT_Q ：25%
+    qrcode.constants.ERROR_CORRECT_H ：30%
+    box_size ：每个模块的像素个数。
+    border ：边框区的厚度，预设是 4。
+    image_factory ：图片格式，默认是 PIL。
+    mask_pattern ：mask_pattern 参数是 0 ～ 7，如果省略会自行使用最适当的方法。
+    """
+    if "pc" == platform:
+        platform = "origin"
+    bf_tracker_link = f"https://battlefieldtracker.com/bf2042/profile/{platform}/{player}/overview"
+    qr = qrcode.QRCode(version=1,
+                       error_correction=qrcode.constants.ERROR_CORRECT_M,
+                       box_size=5,
+                       border=2)
+    qr.add_data(bf_tracker_link)
+    img = qr.make_image(fill_color='white', back_color="black")
+    return img
+
+
+def image_paste(paste_image, under_image, pos):
+    """
+
+    :param paste_image: 需要粘贴的图片
+    :param under_image: 底图
+    :param pos: 位置（x,y）坐标
+    :return: 返回图片
+    """
+    # 获取需要贴入图片的透明通道
+    r, g, b, alpha = paste_image.split()
+    # 粘贴时将alpha值传递至mask属性
+    under_image.paste(paste_image, pos, alpha)
+    return under_image
+
+
+# 获取bot管理员专属图库
+def get_favorite_image():
+    admin_bg_name = os.listdir(filepath + "/img/bg/admin/")
+    index = random.randint(0, len(admin_bg_name) - 1)
+    img = Image.open(filepath + f"/img/bg/admin/{admin_bg_name[index]}").convert('RGBA').resize((1920, 1080))
+    return img
+
+
+# 获取bot管理员专属图库
+def get_user_avatar(user):
+    avatar = download_avatar(user)
+    avatar = Image.open(BytesIO(avatar)).convert('RGBA')
+    return avatar
+
+
+def download_avatar(user_id: str) -> bytes:
+    url = f"http://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
+    data = download_url(url)
+    if not data or hashlib.md5(data).hexdigest() == "acef72340ac0e914090bd35799f5594e":
+        url = f"http://q1.qlogo.cn/g?b=qq&nk={user_id}&s=100"
+        data = download_url(url)
+    return data
+
+
+def download_url(url: str) -> bytes:
+    for i in range(3):
+        try:
+            resp = requests.get(url)
+            if resp.status_code != 200:
+                continue
+            return resp.content
+        except Exception as e:
+            print(f"Error downloading {url}, retry {i}/3: {str(e)}")
