@@ -30,4 +30,4 @@
 <br>**PS**：分辨率一定要是16:9的<br>
 <br>第一次运行如果没有对应的图片会自己下载，有些东西名字太长可能会遮挡到别的内容，我也没时间详细弄了，要上班的
 <br><br>
-![示例图](http://sansenhoshi.top/static/images/battleinfo.png)
+![示例图](http://sansenhoshi.top/static/images/battleinfo.jpg)
