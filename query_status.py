@@ -1,18 +1,29 @@
 import json
-import requests
+import re
 
-from hoshino import Service
-from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic
+import aiohttp
+from hoshino import Service, aiorequests
+from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic, user_img_save
+from hoshino.modules.bf2042.user_manager import bind_user, change_bind, check_user_bind, add_support_user, \
+    query_user_bind, check_user_support, add_user_bind_db
 from hoshino.util import FreqLimiter
+from nonebot import CommandSession
 
 sv = Service('2042战绩查询', help_='''
+-----常规-----
 [.盒+ID] PC战绩查询
 [.2042战绩+ID] PC战绩查询
 [.2042xbox端战绩+ID] xbox战绩查询
 [.2042ps端战绩+ID] ps战绩查询
+[.绑定+ID] 绑定游戏id到QQ
+[.修改绑定+ID] 修改绑定的游戏id
+
+-----特权-----
+[.添加名单]
+[.上传图片] 上传自定义背景
 '''.strip())
 
-_freq_lmt = FreqLimiter(30)
+_freq_lmt = FreqLimiter(15)
 
 
 @sv.on_prefix('.2042战绩')
@@ -26,15 +37,20 @@ async def query_player1(bot, ev):
     else:
         _freq_lmt.start_cd(uid)
     platform = "pc"
+    if player == "":
+        flag = await check_user_bind(uid)
+        if flag[1]:
+            player = flag[0]
+        else:
+            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
+            return
     await bot.send(ev, '查询中，请稍等...')
     try:
-        player_data = query_data(player, platform)
-        if "接口服务器异常" in player_data:
-            await bot.send(ev, "接口服务器异常")
-            return
-        img_mes = bf_2042_gen_pic(player_data, platform, bot, ev)
+        player_data = await query_data(player, platform)
+        img_mes = await bf_2042_gen_pic(player_data, platform, bot, ev)
         if "未找到该玩家" in img_mes:
             await bot.send(ev, "未找到该玩家")
+            return
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
@@ -125,21 +141,18 @@ async def query_player1(bot, ev):
 #     return mes
 
 
-def query_data(player, platform):
-    url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}" \
-          f"&skip_battlelog=true "
-    payload = {}
+async def query_data(player, platform):
+    url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}"
     headers = {
         'accept': 'application/json'
     }
-    response = requests.request("GET", url, headers=headers, data=payload)
-    if response.status_code != 200:
-        return "接口服务异常"
-    rest = response.text
-    if "AH-64GX Apache Warchief" in rest:
-        rest = rest.replace("AH-64GX ", "")
-    result = json.loads(rest)
-    return result
+    async with aiohttp.ClientSession(headers=headers) as session:
+        async with session.get(url) as response:
+            rest = await response.text()
+            if "AH-64GX Apache Warchief" in rest:
+                rest = rest.replace("AH-64GX ", "")
+            result = json.loads(rest)
+            return result
 
 
 @sv.on_prefix('.盒')
@@ -153,12 +166,21 @@ async def query_player2(bot, ev):
     else:
         _freq_lmt.start_cd(uid)
     platform = "pc"
+    if player == "":
+        flag = await check_user_bind(uid)
+        if flag[1]:
+            player = flag[0]
+            print(player)
+        else:
+            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
+            return
     await bot.send(ev, '查询中，请稍等...')
     try:
-        player_data = query_data(player, platform)
-        img_mes = bf_2042_gen_pic(player_data, platform, bot, ev)
+        player_data = await query_data(player, platform)
+        img_mes = await bf_2042_gen_pic(player_data, platform, bot, ev)
         if "未找到该玩家" in img_mes:
             await bot.send(ev, "未找到该玩家")
+            return
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
@@ -196,10 +218,10 @@ async def query_player3(bot, ev):
     platform = "psn"
     await bot.send(ev, '查询中，请稍等...')
     try:
-        player_data = query_data(player, platform)
-        img_mes = bf_2042_gen_pic(player_data, platform, bot, ev)
+        player_data = await query_data(player, platform)
+        img_mes = await bf_2042_gen_pic(player_data, platform, bot, ev)
         if "未找到该玩家" in img_mes:
-            await bot.send(ev, "未找到该玩家")
+            await bot.finish(ev, "未找到该玩家")
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
@@ -222,10 +244,10 @@ async def query_player4(bot, ev):
     platform = "xbl"
     await bot.send(ev, '查询中，请稍等...')
     try:
-        player_data = query_data(player, platform)
-        img_mes = bf_2042_gen_pic(player_data, platform, bot, ev)
+        player_data = await query_data(player, platform)
+        img_mes = await bf_2042_gen_pic(player_data, platform, bot, ev)
         if "未找到该玩家" in img_mes:
-            await bot.send(ev, "未找到该玩家")
+            await bot.finish(ev, "未找到该玩家")
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
@@ -256,3 +278,93 @@ def hacker_check(weapon_data):
             # print("爆头率3：" + weapon["headshots"].replace('%', ""))
             continue
     return sign
+
+
+@sv.on_prefix('.绑定')
+async def bind_player(bot, ev):
+    mes_id = ev['message_id']
+    player = ev.message.extract_plain_text().strip()
+    uid = ev.user_id
+    # 检查绑定状态
+    res = await check_user_bind(uid)
+    if res[1]:
+        await bot.send(ev, "您已经绑定过了，如果你想修改绑定请发送：[.修改绑定+你的游戏id]")
+        return
+    res = await bind_user(uid, 'pc', player)
+    await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}")
+
+
+@sv.on_prefix('.修改绑定')
+async def change_bind_player(bot, ev):
+    mes_id = ev['message_id']
+    player = ev.message.extract_plain_text().strip()
+    uid = ev.user_id
+    res = await check_user_bind(uid)
+    if not res[1]:
+        await bot.send(ev, "您还未绑定，发送  [.绑定 您的游戏ID]  将游戏ID与你的QQ绑定")
+        return
+    res = await change_bind(uid, player)
+    if res:
+        await bot.send(ev, f"[CQ:reply,id={mes_id}]成功")
+    else:
+        await bot.send(ev, f"[CQ:reply,id={mes_id}]失败！请联系维护组")
+
+
+@sv.on_prefix('.添加名单')
+async def add_white_user(bot, ev):
+    uid = ev.user_id
+    # 检测是否绑定
+    is_bind, _ = await check_user_bind(uid)
+    if not is_bind:
+        await bot.send(ev, "未绑定")
+        return
+    await add_support_user(bot, ev)
+
+
+@sv.on_prefix('.查询名单')
+async def query_user(bot, ev):
+    await query_user_bind(bot, ev)
+
+
+# 上传图片
+@sv.on_command('upload_img', aliases=['.上传图片'], only_to_me=False)
+async def upload_img(session: CommandSession):
+    # 获取用户信息
+    uid = session.event['user_id']
+
+    # 检测是否绑定
+    is_bind, _ = await check_user_bind(uid)
+    if not is_bind:
+        await session.send("未绑定")
+        return
+    # 检测是否有权限
+    if not await check_user_support(uid):
+        await session.send("无权限")
+        return
+
+    # 获取用户上传的图片并检查格式
+    session.get('org_img', prompt="请发送一张16:9宽高比的图片：")
+    org_img = session.state['org_img']
+    match = re.search("(?<=url=).*?(?=])", str(org_img))
+    if not match:
+        await session.send("无效的图片链接")
+        return
+
+    # 获取图片流
+    try:
+        pic_response = await aiorequests.get(match.group())
+        pic_stream = await pic_response.content
+    except Exception as e:
+        await session.send("图片获取失败")
+        return
+    # 保存图片
+    try:
+        await user_img_save(pic_stream, uid)
+        await session.send("上传成功")
+    except Exception as e:
+        await session.send("图片保存失败")
+
+
+@sv.on_prefix('.添加用户表')
+async def add_user_db(bot, ev):
+    await add_user_bind_db(bot, ev)

@@ -1,13 +1,17 @@
 import base64
 import hashlib
+import json
 import os
 import random
+import time
 from decimal import Decimal
 from io import BytesIO
-import requests
+
 import qrcode
-import hoshino
+import requests
 from PIL import Image, ImageDraw, ImageFont
+
+from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2
 
 classesList = {
     "Mackay": "麦凯",
@@ -34,20 +38,22 @@ classes_type_list = {
 
 '''2042图片战绩生成'''
 filepath = os.path.dirname(__file__).replace("\\", "/")
+bf_ban_url = "https://api.gametools.network/bfban/checkban"
 
 
-def bf_2042_gen_pic(data, platform, bot, ev):
+async def bf_2042_gen_pic(data, platform, bot, ev):
     # 检查玩家是否存在
-    if "userId" not in data:
+    if "userName" not in data:
         mes = "未找到该玩家"
         return mes
     # 1.创建黑色板块 1920*1080
     new_img = Image.new('RGBA', (1920, 1080), (0, 0, 0, 1000))
     # 2.获取头像图片 150*150
     avatar_url = data["avatar"]
+    print("头像URL处理：" + avatar_url)
     avatar = Image.open(filepath + "/img/class_icon/No-Pats.png").convert('RGBA')
     try:
-        if requests.get(avatar_url).status_code == 200:
+        if not avatar_url == "":
             res = BytesIO(requests.get(avatar_url).content)
             avatar = Image.open(res)
     except Exception as e:
@@ -55,18 +61,17 @@ def bf_2042_gen_pic(data, platform, bot, ev):
     avatar = png_resize(avatar, new_width=145, new_height=145)
     avatar = circle_corner(avatar, 10)
     # 3.获取背景 并 模糊
-    # 判断是否为bot管理员
-    if ev.user_id == hoshino.config.SUPERUSERS[0]:
-        img = get_favorite_image()
+    # 判断是否为support
+    if await check_user_support(ev.user_id):
+        img = get_favorite_image(ev.user_id)
     else:
-        bg_name = os.listdir(filepath + "/img/bg/")
+        bg_name = os.listdir(filepath + "/img/bg/common/")
         index = random.randint(0, len(bg_name) - 1)
-        img = Image.open(filepath + f"/img/bg/{bg_name[index]}").convert('RGBA').resize((1920, 1080))
+        img = Image.open(filepath + f"/img/bg/common/{bg_name[index]}").convert('RGBA').resize((1920, 1080))
     # img_filter = img.filter(ImageFilter.GaussianBlur(radius=3))
     # 4.拼合板块+背景+logo
     new_img.paste(img, (0, 0))
-
-    if ev.user_id == hoshino.config.SUPERUSERS[0]:
+    if await check_user_support2(ev.user_id, data["userName"]):
         logo = get_user_avatar(ev.user_id)
     else:
         logo = Image.open(filepath + "/img/bf2042_logo/bf2042logo.png").convert('RGBA')
@@ -85,9 +90,9 @@ def bf_2042_gen_pic(data, platform, bot, ev):
     # # 等级计算
     # xp = data["XP"][0]["total"]
     # unit = 93944
-    # level = int((xp / unit) + 0.55)
+    # level = int((xp \\ unit) + 0.55)
     # color = 'white'
-    # if int((xp / 93944) + 0.55) > 0:
+    # if int((xp \\ 93944) + 0.55) > 0:
     #     level = ('S' + str(level - 99))
     #     color = '#FF3333'
 
@@ -199,9 +204,40 @@ def bf_2042_gen_pic(data, platform, bot, ev):
     draw.text((950, 370), f'发现敌人数： {eme}', fill='white', font=ch_text_font3)
 
     # 数据4 BF TRACKER个人主页
+    en_text_font_ext = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 24)
     qr_img = qr_code_gen(player_name, platform)
-    new_img.paste(qr_img, (1550, 228))
-    draw.text((1300, 290), "BATTLEFIELD\n    TRACKER", fill="lightgreen", font=en_text_font3)
+    qr_img = qr_img.resize((145, 145))
+    draw.text((1300, 228), "BATTLEFIELD\n    TRACKER", fill="lightgreen", font=en_text_font_ext)
+    new_img.paste(qr_img, (1300, 290))
+
+    weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
+
+    # 数据5 简易检测器
+    hacker_check_res = hacker_check(weapon_list)
+    final = "未知"
+    color = "white"
+    if 2 in hacker_check_res:
+        final = "挂钩"
+        color = "red"
+    elif 1 in hacker_check_res:
+        final = "可疑"
+        color = "yellow"
+    elif kpm > 1.00 and kd > 1.00 and real_kd >1.00:
+        final = "Pro哥"
+        color = "gold"
+    else:
+        final = "薯薯"
+        color = "skyblue"
+    ch_text_font_ext = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
+    ch_text_font_ext2 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
+    draw.text((1495, 228), f'鉴定结果：', fill="white", font=ch_text_font_ext)
+    draw.text((1495, 238), f'\n  {final}', fill=f"{color}", font=ch_text_font_ext2)
+
+    # 添加BF ban 检测结果
+    bf_ban_res = await bf_ban_check(data["userName"])
+    draw.text((1495, 320), f'联BAN查询：', fill="white", font=ch_text_font_ext)
+    draw.text((1495, 330), f'\n  {bf_ban_res}', fill="white", font=ch_text_font_ext2)
+
     # 11.绘制第三部分 TOP4武器/载具 947.5-12.5
     new_img = draw_rect(new_img, (25, 480, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))
     ch_text_font4 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
@@ -437,6 +473,7 @@ def get_top_object_img(object_data):
     :return: 图标
     """
     img_url = object_data["image"]
+    print("物品URL处理：" + img_url)
     img = Image.open(filepath + "/img/object_icon/default.png").convert('RGBA')
     # object_name = "default"
     path = filepath + "/img/object_icon/"
@@ -501,18 +538,24 @@ def image_paste(paste_image, under_image, pos):
     return under_image
 
 
-# 获取bot管理员专属图库
-def get_favorite_image():
-    admin_bg_name = os.listdir(filepath + "/img/bg/admin/")
-    index = random.randint(0, len(admin_bg_name) - 1)
-    img = Image.open(filepath + f"/img/bg/admin/{admin_bg_name[index]}").convert('RGBA').resize((1920, 1080))
+# 获取专属图库
+def get_favorite_image(uid):
+    bg_path = filepath + f"/img/bg/user/{uid}/"
+    if os.listdir(bg_path):
+        bg_name = os.listdir(bg_path)
+        index = random.randint(0, len(bg_name) - 1)
+        img = Image.open(bg_path + f"{bg_name[index]}").convert('RGBA').resize((1920, 1080))
+    else:
+        common_bg_name = os.listdir(filepath + "/img/bg/common/")
+        index = random.randint(0, len(common_bg_name) - 1)
+        img = Image.open(filepath + f"/img/bg/common/{common_bg_name[index]}").convert('RGBA').resize((1920, 1080))
     return img
 
 
 # 获取bot管理员专属图库
 def get_user_avatar(user):
     avatar = download_avatar(user)
-    avatar = Image.open(BytesIO(avatar)).convert('RGBA')
+    avatar = Image.open(BytesIO(avatar)).convert('RGBA').resize((1920, 1080))
     return avatar
 
 
@@ -534,3 +577,85 @@ def download_url(url: str) -> bytes:
             return resp.content
         except Exception as e:
             print(f"Error downloading {url}, retry {i}/3: {str(e)}")
+
+
+async def user_img_save(pic_data: bytes, uid: int):
+    bg_path = filepath + f"/img/bg/user/{uid}/"
+    try:
+        # 裁剪图片
+        pic_data = cut_image(pic_data, 16 / 9)
+        # 保存图片
+        time_now = int(time.time())
+        pic_data = pic_data.convert('RGB')
+        pic_data = pic_data.resize((1920, 1080))
+        pic_data.save(bg_path + str(time_now) + ".jpeg", quality=95)
+    except Exception as e:
+        raise Exception("图片保存失败")
+
+
+# 图片裁剪
+def cut_image(pic_data: bytes, target_ratio: float):
+    try:
+        pic_data = Image.open(BytesIO(pic_data))
+        w, h = pic_data.size
+        pic_ratio = w / h
+        if pic_ratio > target_ratio:
+            # 宽高比大于目标比例，按高度缩放。保持宽度不变
+            new_h = w / target_ratio
+            h_delta = (h - new_h) / 2
+            w_delta = 0
+        else:
+            # 宽高比小于目标比例，按宽度缩放。保持高度不变
+            new_w = h * target_ratio
+            w_delta = (w - new_w) / 2
+            h_delta = 0
+        cropped = pic_data.crop((w_delta, h_delta, w - w_delta, h - h_delta))
+        return cropped
+    except Exception as e:
+        raise Exception("图片剪裁失败")
+
+
+def hacker_check(weapon_data):
+    """
+
+    """
+    ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm"]
+    sign = []
+    for weapon in weapon_data:
+        # 击杀数大于300切爆头率大于40小于60标记1
+        if weapon["type"] not in ignore_type and float(weapon["kills"]) > 300.00 and float(
+                weapon["headshots"].replace('%', "")) > 40.00 and float(weapon["headshots"].replace('%', "")) < 60.00:
+            # print("爆头率1：" + weapon["headshots"].replace('%', ""))
+            sign.append(1)
+        # 击杀数大于300切爆头率大于60标记2
+        elif weapon["type"] not in ignore_type and float(weapon["kills"]) > 300.00 and float(
+                weapon["headshots"].replace('%', "")) > 60.00:
+            # print("爆头率2：" + weapon["headshots"].replace('%', ""))
+            sign.append(2)
+        else:
+            # print("爆头率3：" + weapon["headshots"].replace('%', ""))
+            continue
+    return sign
+
+
+async def bf_ban_check(user_name):
+    payload = json.dumps([
+        {
+            "name": f"{user_name}"
+        }
+    ])
+    headers = {
+        'accept': '*/*',
+        'Content-Type': 'application/json'
+    }
+    trans = "未查询到相关封禁信息"
+    print("开始处理联Ban："+bf_ban_url)
+    try:
+        response = requests.request("POST", bf_ban_url, headers=headers, data=payload)
+        res = json.loads(response.text)
+        if res[0]["hacker"]:
+            ban_result = res[0]['status']
+            trans = ban_reason[ban_result]
+    except Exception as e:
+        print(e)
+    return trans
