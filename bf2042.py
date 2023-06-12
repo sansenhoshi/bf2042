@@ -35,6 +35,17 @@ classes_type_list = {
     "Recon": "侦察兵",
     "Engineer": "工程兵"
 }
+ban_reason = {
+    0: "未处理",
+    1: "石锤",
+    2: "待自证",
+    3: "MOSS自证",
+    4: "无效举报",
+    5: "讨论中",
+    6: "需要更多管理投票",
+    7: "未知原因封禁",
+    8: "刷枪"
+}
 
 '''2042图片战绩生成'''
 filepath = os.path.dirname(__file__).replace("\\", "/")
