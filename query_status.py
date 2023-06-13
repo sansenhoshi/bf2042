@@ -170,7 +170,6 @@ async def query_player2(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print(player)
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
