@@ -657,18 +657,21 @@ async def bf_ban_check(user_name, userids, personaids):
         async with session.get(url, headers=headers) as response:
             if response.status == 200:
                 res = await response.json()
-                if res["names"][user_name.lower()]["hacker"]:
+                hacker_name = res["names"][user_name.lower()]["hacker"]
+                hacker_userids = res["userids"][f"{userids}"]["hacker"]
+                hacker_personaids = res["personaids"][f"{personaids}"]["hacker"]
+                if hacker_name:
                     ban_result = res["names"][user_name.lower()]["status"]
                     trans = ban_reason[ban_result]
-                elif res["userids"][f"{userids}"]["hacker"]:
+                elif hacker_userids:
                     ban_result = res["userids"][f"{userids}"]["status"]
                     trans = ban_reason[ban_result]
-                elif res["personaids"][f"{personaids}"]["hacker"]:
+                elif hacker_personaids:
                     ban_result = res["personaids"][f"{personaids}"]["status"]
                     trans = ban_reason[ban_result]
                 else:
-                    res_code = search_field_in_json(res, "status")
-                    trans = ban_reason[res_code]
+                    res_data = search_field_in_json(res, "status")
+                    trans = ban_reason[res_data]
     return trans
 
 
