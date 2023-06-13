@@ -1,12 +1,11 @@
 import base64
 import hashlib
-import json
 import os
 import random
 import time
 from decimal import Decimal
 from io import BytesIO
-
+import aiohttp
 import qrcode
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -35,6 +34,7 @@ classes_type_list = {
     "Recon": "侦察兵",
     "Engineer": "工程兵"
 }
+
 ban_reason = {
     0: "未处理",
     1: "石锤",
@@ -233,7 +233,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     elif 1 in hacker_check_res:
         final = "可疑"
         color = "yellow"
-    elif kpm > 1.00 and kd > 1.00 and real_kd >1.00:
+    elif kpm > 1.00:
         final = "Pro哥"
         color = "gold"
     else:
@@ -245,7 +245,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     draw.text((1495, 238), f'\n  {final}', fill=f"{color}", font=ch_text_font_ext2)
 
     # 添加BF ban 检测结果
-    bf_ban_res = await bf_ban_check(data["userName"])
+    bf_ban_res = await bf_ban_check(data["userName"], data["userId"], data["id"])
     draw.text((1495, 320), f'联BAN查询：', fill="white", font=ch_text_font_ext)
     draw.text((1495, 330), f'\n  {bf_ban_res}', fill="white", font=ch_text_font_ext2)
 
@@ -649,24 +649,21 @@ def hacker_check(weapon_data):
     return sign
 
 
-async def bf_ban_check(user_name):
-    payload = json.dumps([
-        {
-            "name": f"{user_name}"
-        }
-    ])
-    headers = {
-        'accept': '*/*',
-        'Content-Type': 'application/json'
-    }
+async def bf_ban_check(user_name, userids, personaids):
+    url = f"https://api.gametools.network/bfban/checkban/?names={user_name}&userids={userids}&personaids={personaids}"
+    headers = {'accept': 'application/json'}
     trans = "未查询到相关封禁信息"
-    print("开始处理联Ban："+bf_ban_url)
-    try:
-        response = requests.request("POST", bf_ban_url, headers=headers, data=payload)
-        res = json.loads(response.text)
-        if res[0]["hacker"]:
-            ban_result = res[0]['status']
-            trans = ban_reason[ban_result]
-    except Exception as e:
-        print(e)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if response.status == 200:
+                res = await response.json()
+                if res["names"][user_name.lower()]["hacker"]:
+                    ban_result = res["names"][user_name.lower()]["status"]
+                    trans = ban_reason[ban_result]
+                elif res["userids"][f"{userids}"]["hacker"]:
+                    ban_result = res["userids"][f"{userids}"]["status"]
+                    trans = ban_reason[ban_result]
+                elif res["personaids"][f"{personaids}"]["hacker"]:
+                    ban_result = res["personaids"][f"{personaids}"]["status"]
+                    trans = ban_reason[ban_result]
     return trans

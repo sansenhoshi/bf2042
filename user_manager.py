@@ -5,7 +5,7 @@ _path = os.path.dirname(__file__).replace("\\", "/")
 
 
 # 添加名单表结构
-async def add_user_bind_db(bot, ev):
+async def add_user_bind(bot, ev):
     uid = ev.user_id
     if uid == bot.config.SUPERUSERS[0]:
         connect = sqlite3.connect(database=f'{_path}/data/user.db')
@@ -201,7 +201,6 @@ async def check_user_support2(uid, user_name):
     if len(users) > 0:
         if users[0][0] == 1:
             db_user = users[0][1]
-            print(type(db_user))
             db_user = db_user.upper()
             data_user = user_name.upper()
             if db_user == data_user:
