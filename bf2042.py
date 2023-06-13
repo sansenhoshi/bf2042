@@ -670,8 +670,9 @@ async def bf_ban_check(user_name, userids, personaids):
                     ban_result = res["personaids"][f"{personaids}"]["status"]
                     trans = ban_reason[ban_result]
                 else:
-                    res_data = search_field_in_json(res, "status")
-                    trans = ban_reason[res_data]
+                    if "status" in str(res):
+                        res_data = search_field_in_json(res, "status")
+                        trans = ban_reason[res_data]
     return trans
 
 
