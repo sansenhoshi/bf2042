@@ -666,4 +666,31 @@ async def bf_ban_check(user_name, userids, personaids):
                 elif res["personaids"][f"{personaids}"]["hacker"]:
                     ban_result = res["personaids"][f"{personaids}"]["status"]
                     trans = ban_reason[ban_result]
+                else:
+                    res_code = search_field_in_json(res, "status")
+                    trans = ban_reason[res_code]
     return trans
+
+
+def search_field_in_json(obj, field_name):
+    """
+    递归搜索 JSON 对象中的指定字段名
+    :param obj: JSON 对象
+    :param field_name: 指定的字段名
+    :return: 找到的字段值，未找到时返回 None
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key == field_name:
+                return value
+            else:
+                result = search_field_in_json(value, field_name)
+                if result is not None:
+                    return result
+    elif isinstance(obj, list):
+        for item in obj:
+            result = search_field_in_json(item, field_name)
+            if result is not None:
+                return result
+    else:
+        return None
