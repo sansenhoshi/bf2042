@@ -160,8 +160,6 @@ async def check_user_bind(uid):
     users = result.fetchall()
     player = ""
     if len(users) > 0:
-        player = users[0][0]
-        print(player)
         flag = True
     cursor.close()
     connect.commit()
@@ -181,7 +179,6 @@ async def check_user_support(uid):
     users = result.fetchall()
     if len(users) > 0:
         if users[0][0] == 1:
-            print(users[0][0])
             flag = True
     cursor.close()
     connect.commit()
