@@ -1,13 +1,15 @@
 import json
 import re
-
+import logging
+import requests
 import aiohttp
+from nonebot import CommandSession
+
 from hoshino import Service, aiorequests
 from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic, user_img_save
 from hoshino.modules.bf2042.user_manager import bind_user, change_bind, check_user_bind, add_support_user, \
-    query_user_bind, check_user_support, add_user_bind_db
+    query_user_bind, check_user_support
 from hoshino.util import FreqLimiter
-from nonebot import CommandSession
 
 sv = Service('2042战绩查询', help_='''
 -----常规-----
@@ -19,7 +21,6 @@ sv = Service('2042战绩查询', help_='''
 [.修改绑定+ID] 修改绑定的游戏id
 
 -----特权-----
-[.添加名单]
 [.上传图片] 上传自定义背景
 '''.strip())
 
@@ -155,6 +156,22 @@ async def query_data(player, platform):
             return result
 
 
+async def check_user_status(username):
+    flag = False
+    url = f"https://api.gametools.network/bf2042/player/?name={username}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            play_status = await response.json()
+
+    results = play_status["results"]
+    length = len(results)
+    if length < 1:
+        flag = True
+    print(flag)
+    return flag
+
+
 @sv.on_prefix('.盒')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
@@ -170,6 +187,7 @@ async def query_player2(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
+            print(player)
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -256,34 +274,15 @@ async def query_player4(bot, ev):
         print(con_ee)
 
 
-def hacker_check(weapon_data):
-    """
-
-    """
-    ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm"]
-    sign = []
-    for weapon in weapon_data:
-        # 击杀数大于300切爆头率大于40小于60标记1
-        if weapon["type"] not in ignore_type and float(weapon["kills"]) > 300.00 and float(
-                weapon["headshots"].replace('%', "")) > 40.00 and float(weapon["headshots"].replace('%', "")) < 60.00:
-            # print("爆头率1：" + weapon["headshots"].replace('%', ""))
-            sign.append(1)
-        # 击杀数大于300切爆头率大于60标记2
-        elif weapon["type"] not in ignore_type and float(weapon["kills"]) > 300.00 and float(
-                weapon["headshots"].replace('%', "")) > 60.00:
-            # print("爆头率2：" + weapon["headshots"].replace('%', ""))
-            sign.append(2)
-        else:
-            # print("爆头率3：" + weapon["headshots"].replace('%', ""))
-            continue
-    return sign
-
-
 @sv.on_prefix('.绑定')
 async def bind_player(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     uid = ev.user_id
+    # 检查id是否存在
+    if await check_user_status(player):
+        await bot.send(ev, "ID不存在，请检查ID")
+        return
     # 检查绑定状态
     res = await check_user_bind(uid)
     if res[1]:
@@ -298,6 +297,10 @@ async def change_bind_player(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     uid = ev.user_id
+    # 检查id是否存在
+    if await check_user_status(player):
+        await bot.send(ev, "ID不存在，请检查ID")
+        return
     res = await check_user_bind(uid)
     if not res[1]:
         await bot.send(ev, "您还未绑定，发送  [.绑定 您的游戏ID]  将游戏ID与你的QQ绑定")
@@ -362,8 +365,3 @@ async def upload_img(session: CommandSession):
         await session.send("上传成功")
     except Exception as e:
         await session.send("图片保存失败")
-
-
-@sv.on_prefix('.添加用户表')
-async def add_user_db(bot, ev):
-    await add_user_bind_db(bot, ev)
