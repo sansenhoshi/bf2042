@@ -5,11 +5,11 @@ import random
 import time
 from decimal import Decimal
 from io import BytesIO
+
 import aiohttp
 import qrcode
 import requests
 from PIL import Image, ImageDraw, ImageFont
-
 from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2
 
 classesList = {
@@ -227,18 +227,18 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     hacker_check_res = hacker_check(weapon_list)
     final = "未知"
     color = "white"
+    if kpm > 1.00 and kd > 2 and real_kd > 1:
+        final = "Pro哥"
+        color = "gold"
+    else:
+        final = "薯薯"
+        color = "skyblue"
     if 2 in hacker_check_res:
         final = "挂钩"
         color = "red"
     elif 1 in hacker_check_res:
         final = "可疑"
         color = "yellow"
-    elif kpm > 1.00:
-        final = "Pro哥"
-        color = "gold"
-    else:
-        final = "薯薯"
-        color = "skyblue"
     ch_text_font_ext = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
     ch_text_font_ext2 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
     draw.text((1495, 228), f'鉴定结果：', fill="white", font=ch_text_font_ext)
@@ -246,8 +246,8 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
 
     # 添加BF ban 检测结果
     bf_ban_res = await bf_ban_check(data["userName"], data["userId"], data["id"])
-    draw.text((1495, 320), f'联BAN查询：', fill="white", font=ch_text_font_ext)
-    draw.text((1495, 330), f'\n  {bf_ban_res}', fill="white", font=ch_text_font_ext2)
+    draw.text((1495, 340), f'联BAN查询：', fill="white", font=ch_text_font_ext)
+    draw.text((1495, 350), f'\n  {bf_ban_res}', fill="white", font=ch_text_font_ext2)
 
     # 11.绘制第三部分 TOP4武器/载具 947.5-12.5
     new_img = draw_rect(new_img, (25, 480, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))
@@ -628,19 +628,23 @@ def cut_image(pic_data: bytes, target_ratio: float):
 
 def hacker_check(weapon_data):
     """
-
+    简易外挂数据检测
+    :param weapon_data: 武器数据
+    :return: 返回检测的数据标记，
+    击杀数大于300切爆头率大于30小于40标记1，
+    击杀数大于100切爆头率大于40标记2（基本实锤）
     """
     ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm"]
     sign = []
     for weapon in weapon_data:
-        # 击杀数大于300切爆头率大于40小于60标记1
-        if weapon["type"] not in ignore_type and float(weapon["kills"]) > 300.00 and float(
-                weapon["headshots"].replace('%', "")) > 40.00 and float(weapon["headshots"].replace('%', "")) < 60.00:
+        # 击杀数大于300切爆头率大于30小于40标记1
+        if weapon["type"] not in ignore_type and float(weapon["kills"]) > 100.00 and float(
+                weapon["headshots"].replace('%', "")) > 30.00 and float(weapon["headshots"].replace('%', "")) <= 40.00:
             # print("爆头率1：" + weapon["headshots"].replace('%', ""))
             sign.append(1)
-        # 击杀数大于300切爆头率大于60标记2
-        elif weapon["type"] not in ignore_type and float(weapon["kills"]) > 300.00 and float(
-                weapon["headshots"].replace('%', "")) > 60.00:
+        # 击杀数大于100切爆头率大于40标记2
+        if weapon["type"] not in ignore_type and float(weapon["kills"]) > 100.00 and float(
+                weapon["headshots"].replace('%', "")) > 40.00:
             # print("爆头率2：" + weapon["headshots"].replace('%', ""))
             sign.append(2)
         else:
