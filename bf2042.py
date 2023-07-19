@@ -227,27 +227,42 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     hacker_check_res = hacker_check(weapon_list)
     final = "未知"
     color = "white"
-    if kpm > 1.00 and kd > 2 and real_kd > 1:
-        final = "Pro哥"
-        color = "gold"
-    else:
-        final = "薯薯"
-        color = "skyblue"
-    if 2 in hacker_check_res:
+    check_res = False
+
+    if 3 in hacker_check_res:
         final = "挂钩"
         color = "red"
-    elif 1 in hacker_check_res:
-        final = "可疑"
+        check_res = True
+    elif 2 in hacker_check_res:
+        final = "挂？\n样本太少了"
         color = "yellow"
+        check_res = True
+    elif 1 in hacker_check_res:
+        final = "数据不对？\n样本太少了"
+        color = "yellow"
+        check_res = True
+    elif 0 in hacker_check_res:
+        final = "可疑？\n建议详查"
+        color = "yellow"
+        check_res = True
+    if not check_res:
+        # kpm大于1 总kd大于2 真实kd大于1.5
+        if kpm > 1.00 and kd > 2 and real_kd > 1.5:
+            final = "Pro哥"
+            color = "gold"
+        else:
+            final = "薯薯\n别拷打我了哥"
+            color = "skyblue"
+
     ch_text_font_ext = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
-    ch_text_font_ext2 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
-    draw.text((1495, 228), f'鉴定结果：', fill="white", font=ch_text_font_ext)
-    draw.text((1495, 238), f'\n  {final}', fill=f"{color}", font=ch_text_font_ext2)
+    ch_text_font_ext2 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 28)
+    draw.text((1485, 228), f'鉴定结果（仅供参考）：', fill="white", font=ch_text_font_ext)
+    draw.text((1485, 238), f'\n{final}', fill=f"{color}", font=ch_text_font_ext2)
 
     # 添加BF ban 检测结果
     bf_ban_res = await bf_ban_check(data["userName"], data["userId"], data["id"])
-    draw.text((1495, 340), f'联BAN查询：', fill="white", font=ch_text_font_ext)
-    draw.text((1495, 350), f'\n  {bf_ban_res}', fill="white", font=ch_text_font_ext2)
+    draw.text((1485, 350), f'联BAN查询：', fill="white", font=ch_text_font_ext)
+    draw.text((1485, 360), f'\n{bf_ban_res}', fill="white", font=ch_text_font_ext2)
 
     # 11.绘制第三部分 TOP4武器/载具 947.5-12.5
     new_img = draw_rect(new_img, (25, 480, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))
@@ -637,19 +652,25 @@ def hacker_check(weapon_data):
     ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm"]
     sign = []
     for weapon in weapon_data:
-        # 击杀数大于300切爆头率大于30小于40标记1
-        if weapon["type"] not in ignore_type and float(weapon["kills"]) > 100.00 and float(
-                weapon["headshots"].replace('%', "")) > 30.00 and float(weapon["headshots"].replace('%', "")) <= 40.00:
-            # print("爆头率1：" + weapon["headshots"].replace('%', ""))
-            sign.append(1)
-        # 击杀数大于100切爆头率大于40标记2
-        if weapon["type"] not in ignore_type and float(weapon["kills"]) > 100.00 and float(
-                weapon["headshots"].replace('%', "")) > 40.00:
-            # print("爆头率2：" + weapon["headshots"].replace('%', ""))
-            sign.append(2)
-        else:
-            # print("爆头率3：" + weapon["headshots"].replace('%', ""))
+        if weapon["type"] not in ignore_type:
+            sign.append(headshot(weapon))
             continue
+    return sign
+
+
+def headshot(weapon):
+    sign = 999
+    if 30.00 <= float(weapon["headshots"].replace('%', "")) and float(weapon["kills"]) >= 100:
+        if float(weapon["headshots"].replace('%', "")) <= 40.00:
+            if float(weapon["kills"]) < 200:
+                sign = 1
+            else:
+                sign = 0
+        elif float(weapon["headshots"].replace('%', "")) > 40.00:
+            if float(weapon["kills"]) < 200:
+                sign = 2
+            else:
+                sign = 3
     return sign
 
 
