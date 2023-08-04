@@ -17,14 +17,14 @@ sv = Service('2042战绩查询', help_='''
 [.2042战绩+ID] PC战绩查询
 [.2042xbox端战绩+ID] xbox战绩查询
 [.2042ps端战绩+ID] ps战绩查询
-[.绑定+ID] 绑定游戏id到QQ
+[.绑定+ID] 绑定游戏id到QQ（仅仅支持PC）
 [.修改绑定+ID] 修改绑定的游戏id
 
 -----特权-----
 [.上传图片] 上传自定义背景
 '''.strip())
 
-_freq_lmt = FreqLimiter(15)
+_freq_lmt = FreqLimiter(10)
 
 
 @sv.on_prefix('.2042战绩')
@@ -140,6 +140,21 @@ async def query_player1(bot, ev):
 #         message3 = "xbox请使用.2042xbox端战绩+id\nPS请使用.2042PS端战绩+id"
 #         mes = [message, message2, message3]
 #     return mes
+# 解决物品名称过长溢出问题
+obj_filter = {
+    "AH-64GX Apache Warchief": "Apache Warchief",
+    "GOL Sniper Magnum": "GOL Magnum",
+    "AH-6J Little Bird": "Little Bird",
+    "Sd. Kfz 251 Halftrack": "251 Halftrack",
+    "9K22 Tunguska-M": "Tunguska-M"
+}
+
+
+def str_filter(obj_str):
+    # 遍历字典，替换字符串中的键为对应的值
+    for key in obj_filter:
+        obj_str = obj_str.replace(key, obj_filter[key])
+    return obj_str
 
 
 async def query_data(player, platform):
@@ -150,8 +165,7 @@ async def query_data(player, platform):
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as response:
             rest = await response.text()
-            if "AH-64GX Apache Warchief" in rest:
-                rest = rest.replace("AH-64GX ", "")
+            rest = str_filter(rest)
             result = json.loads(rest)
             return result
 
@@ -233,12 +247,21 @@ async def query_player3(bot, ev):
     else:
         _freq_lmt.start_cd(uid)
     platform = "psn"
+    if player == "":
+        flag = await check_user_bind(uid)
+        if flag[1]:
+            player = flag[0]
+            print(player)
+        else:
+            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
+            return
     await bot.send(ev, '查询中，请稍等...')
     try:
         player_data = await query_data(player, platform)
         img_mes = await bf_2042_gen_pic(player_data, platform, bot, ev)
         if "未找到该玩家" in img_mes:
-            await bot.finish(ev, "未找到该玩家")
+            await bot.send(ev, "未找到该玩家")
+            return
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
@@ -258,13 +281,22 @@ async def query_player4(bot, ev):
         return
     else:
         _freq_lmt.start_cd(uid)
-    platform = "xbl"
+    platform = "xbox"
+    if player == "":
+        flag = await check_user_bind(uid)
+        if flag[1]:
+            player = flag[0]
+            print(player)
+        else:
+            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
+            return
     await bot.send(ev, '查询中，请稍等...')
     try:
         player_data = await query_data(player, platform)
         img_mes = await bf_2042_gen_pic(player_data, platform, bot, ev)
         if "未找到该玩家" in img_mes:
-            await bot.finish(ev, "未找到该玩家")
+            await bot.send(ev, "未找到该玩家")
+            return
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')

@@ -5,7 +5,7 @@ import random
 import time
 from decimal import Decimal
 from io import BytesIO
-
+import json
 import aiohttp
 import qrcode
 import requests
@@ -60,7 +60,11 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 1.创建黑色板块 1920*1080
     new_img = Image.new('RGBA', (1920, 1080), (0, 0, 0, 1000))
     # 2.获取头像图片 150*150
-    avatar_url = data["avatar"]
+    platform_id = 1
+    nucleus_id = data['userId']
+    persona_id = data['id']
+    # 调用接口获取正确的头像
+    avatar_url = await get_avatar(platform_id, persona_id, nucleus_id)
     print("头像URL处理：" + avatar_url)
     avatar = Image.open(filepath + "/img/class_icon/No-Pats.png").convert('RGBA')
     try:
@@ -384,6 +388,9 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     draw.text((1325, 995), f'击杀：{top_vehicles_list[4]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((1630, 950), f'KPM：{top_vehicles_list[4]["killsPerMinute"]}', fill="white", font=ch_text_font4)
     draw.text((1630, 995), f'摧毁数：{top_vehicles_list[4]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
+
+    # 添加开发团队logo
+    new_img = paste_ic_logo(new_img)
 
     # 显示图片
     # new_img.show()
@@ -723,3 +730,27 @@ def search_field_in_json(obj, field_name):
                 return result
     else:
         return None
+
+
+def paste_ic_logo(img):
+    # 载入logo
+    ic_logo = filepath + "/img/dev_logo/IC.png"
+    # 载入字体
+    en_text_font = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 18)
+    logo_file = Image.open(ic_logo).convert("RGBA").resize((20, 20))
+    draw = ImageDraw.Draw(img)
+    img = draw_rect(img, (645, 1058, 1220, 1078), 1, fill=(0, 0, 0, 150))
+    draw.text((700, 1055), "BF2042 Player‘s Status Plugin Designed By", fill="white", font=en_text_font)
+    img = image_paste(logo_file, img, (1040, 1058))
+    draw.text((1065, 1055), "SANSENHOSHI", fill="white", font=en_text_font)
+    return img
+
+
+# 获取ea头像（由于数据接口返回头像问题，改为详细获取头像和用户名）
+async def get_avatar(platform_id, persona_id, nucleus_id):
+    url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers={'accept': 'application/json'}) as response:
+            data = json.loads(await response.text())
+            avatar = data['avatar']
+            return avatar
