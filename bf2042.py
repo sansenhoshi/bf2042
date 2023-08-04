@@ -252,7 +252,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     if not check_res:
         # kpm大于1 总kd大于2 真实kd大于1.5
         if kpm > 1.00 and kd > 2 and real_kd > 1.5:
-            final = "Pro哥"
+            final = "Pro哥\n爱吃薯条，容易“**”"
             color = "gold"
         else:
             final = "薯薯\n别拷打我了哥"
