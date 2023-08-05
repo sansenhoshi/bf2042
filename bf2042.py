@@ -656,7 +656,7 @@ def hacker_check(weapon_data):
     击杀数大于300切爆头率大于30小于40标记1，
     击杀数大于100切爆头率大于40标记2（基本实锤）
     """
-    ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm"]
+    ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm", "Crossbows", "Shotguns"]
     sign = []
     for weapon in weapon_data:
         if weapon["type"] not in ignore_type:

@@ -192,7 +192,7 @@ async def query_player2(bot, ev):
     player = ev.message.extract_plain_text().strip()
     uid = ev.user_id
     if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒)', at_sender=True)
+        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
         return
     else:
         _freq_lmt.start_cd(uid)
@@ -242,7 +242,7 @@ async def query_player3(bot, ev):
     player = ev.message.extract_plain_text().strip()
     uid = ev.user_id
     if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒)', at_sender=True)
+        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
         return
     else:
         _freq_lmt.start_cd(uid)
@@ -277,7 +277,7 @@ async def query_player4(bot, ev):
     player = ev.message.extract_plain_text().strip()
     uid = ev.user_id
     if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒)', at_sender=True)
+        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
         return
     else:
         _freq_lmt.start_cd(uid)
