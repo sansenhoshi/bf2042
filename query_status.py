@@ -1,15 +1,15 @@
 import json
 import re
-import logging
-import requests
-import aiohttp
-from nonebot import CommandSession
 
+import aiohttp
 from hoshino import Service, aiorequests
-from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic, user_img_save
+from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic
+from hoshino.modules.bf2042.picture_tools import user_img_save
+from hoshino.modules.bf2042.query_server import get_server_list
 from hoshino.modules.bf2042.user_manager import bind_user, change_bind, check_user_bind, add_support_user, \
     query_user_bind, check_user_support
 from hoshino.util import FreqLimiter
+from nonebot import CommandSession
 
 sv = Service('2042战绩查询', help_='''
 -----常规-----
@@ -19,6 +19,7 @@ sv = Service('2042战绩查询', help_='''
 [.2042ps端战绩+ID] ps战绩查询
 [.绑定+ID] 绑定游戏id到QQ（仅仅支持PC）
 [.修改绑定+ID] 修改绑定的游戏id
+[.2042门户+门户关键字] 查询门户服务器列表
 
 -----特权-----
 [.上传图片] 上传自定义背景
@@ -42,6 +43,7 @@ async def query_player1(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
+            print("用户："+player)
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -55,10 +57,10 @@ async def query_player1(bot, ev):
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
-        print(val_ee)
+        print("异常：" + val_ee)
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系bot维护组')
-        print(con_ee)
+        print("异常：" + con_ee)
 
 
 # def get_player_status(player_id, platform): try: url =
@@ -182,7 +184,7 @@ async def check_user_status(username):
     length = len(results)
     if length < 1:
         flag = True
-    print(flag)
+    print("用户状态：" + str(flag))
     return flag
 
 
@@ -201,7 +203,7 @@ async def query_player2(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print(player)
+            print("用户：" + player)
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -215,10 +217,10 @@ async def query_player2(bot, ev):
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
-        print(val_ee)
+        print("异常：" + val_ee)
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系bot维护组')
-        print(con_ee)
+        print("异常：" + con_ee)
 
 
 # @sv.on_prefix('.2042载具')
@@ -236,6 +238,23 @@ async def query_player2(bot, ev):
 #     await bot.send(ev, mes[2])
 
 
+@sv.on_prefix('.2042门户')
+async def query_vehicles(bot, ev):
+    uid = ev.user_id
+    if not _freq_lmt.check(uid):
+        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒)', at_sender=True)
+        return
+    else:
+        _freq_lmt.start_cd(uid)
+    server_name = ev.message.extract_plain_text().strip()
+    await bot.send(ev, '查询时间较长，请耐心等待...')
+    try:
+        mes = await get_server_list(server_name)
+    except Exception as err:
+        mes = f"异常:{err}"
+    await bot.send(ev, mes)
+
+
 @sv.on_prefix('.2042ps端战绩')
 async def query_player3(bot, ev):
     mes_id = ev['message_id']
@@ -251,7 +270,7 @@ async def query_player3(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print(player)
+            print("用户："+player)
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -265,10 +284,10 @@ async def query_player3(bot, ev):
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
-        print(val_ee)
+        print("异常："+val_ee)
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系bot维护组')
-        print(con_ee)
+        print("异常："+con_ee)
 
 
 @sv.on_prefix('.2042xbox端战绩')
@@ -286,7 +305,7 @@ async def query_player4(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print(player)
+            print("用户："+player)
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -300,10 +319,10 @@ async def query_player4(bot, ev):
         await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议等等再查')
-        print(val_ee)
+        print("异常："+val_ee)
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系bot维护组')
-        print(con_ee)
+        print("异常："+con_ee)
 
 
 @sv.on_prefix('.绑定')
@@ -320,7 +339,7 @@ async def bind_player(bot, ev):
     if res[1]:
         await bot.send(ev, "您已经绑定过了，如果你想修改绑定请发送：[.修改绑定+你的游戏id]")
         return
-    res = await bind_user(uid, 'pc', player)
+    res = await bind_user(uid, player)
     await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}")
 
 

@@ -1,5 +1,8 @@
-import sqlite3
 import os
+import sqlite3
+
+import aiohttp
+
 # 路径设置
 _path = os.path.dirname(__file__).replace("\\", "/")
 
@@ -15,6 +18,8 @@ async def add_user_bind(bot, ev):
                         player TEXT NOT NULL,
                         platform TEXT NOT NULL,
                         qq_id TEXT NOT NULL,
+                        nucleusId TEXT,
+                        personaId TEXT,
                         support INTEGER NOT NULL 
                         );"""
         res = cursor.execute(sql)
@@ -48,20 +53,44 @@ async def query_user_bind(bot, ev):
 
 
 # 绑定用户
-async def bind_user(uid, platform, player):
+async def bind_user(uid, player):
     mes = ''
     connect = sqlite3.connect(database=f'{_path}/data/user.db')
     cursor = connect.cursor()
-    support = 0
-    info = (player, platform, uid, support)
-    sql = 'INSERT INTO user_bind(player,platform,qq_id,support) VALUES (?,?,?,?);'
+    try:
+        info = await get_user_info(player, uid)
+    except KeyError as e:
+        mes += f"异常：{e}\n"
+        return mes
+    sql = 'INSERT INTO user_bind(player,platform,qq_id,nucleusId,personaId,support) VALUES (?,?,?,?,?,?);'
     res = cursor.execute(sql, info)
     cursor.close()
     connect.commit()
     connect.close()
     if res.rowcount > 0:
-        mes += f"绑定成功，用户{uid}当前绑定的游戏id为：\n{player}"
+        mes += f"绑定成功，用户{uid}当前绑定的游戏id为：{player}"
     return mes
+
+
+async def get_user_info(player_name, uid):
+    url = f"https://api.gametools.network/bf2042/player/?name={player_name}"
+    headers = {
+        'accept': 'application/json'
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            results = await response.json()
+    result = results["results"]
+    if result:
+        res = result[0]
+        nucleusId = res["nucleusId"]
+        personaId = res["personaId"]
+        platform = res["platform"]
+        name = res["name"]
+        info = (name, platform, uid, nucleusId, personaId, 0)
+    else:
+        raise KeyError("nucleusId")
+    return info
 
 
 # 添加支援者专属
@@ -136,8 +165,16 @@ async def change_bind(uid, player):
     flag = False
     connect = sqlite3.connect(database=f'{_path}/data/user.db')
     cursor = connect.cursor()
-    data = (player, uid)
-    sql = 'UPDATE user_bind SET player =? WHERE qq_id =?'
+    try:
+        info = await get_user_info(player, uid)
+    except Exception as e:
+        print(f"异常：{e}\n")
+        return e
+    name = info[0]
+    nucleusId = info[3]
+    personaId = info[4]
+    data = (name, nucleusId, personaId, uid)
+    sql = 'UPDATE user_bind SET player = ?, nucleusId = ?, personaId = ? WHERE qq_id = ?'
     res = cursor.execute(sql, data)
     cursor.close()
     connect.commit()
@@ -160,6 +197,8 @@ async def check_user_bind(uid):
     users = result.fetchall()
     player = ""
     if len(users) > 0:
+        player = users[0][0]
+        print(player)
         flag = True
     cursor.close()
     connect.commit()
@@ -179,6 +218,7 @@ async def check_user_support(uid):
     users = result.fetchall()
     if len(users) > 0:
         if users[0][0] == 1:
+            print(users[0][0])
             flag = True
     cursor.close()
     connect.commit()
