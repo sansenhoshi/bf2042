@@ -11,6 +11,7 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 
 filepath = os.path.dirname(__file__).replace("\\", "/")
+# 记录URL
 bf_ban_url = "https://api.gametools.network/bfban/checkban"
 
 

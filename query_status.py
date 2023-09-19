@@ -21,11 +21,10 @@ sv = Service('2042战绩查询', help_='''
 [.绑定+ID] 绑定游戏id到QQ（仅仅支持PC）
 [.修改绑定+ID] 修改绑定的游戏id
 [.2042门户+门户关键字] 查询门户服务器列表
-
 -----特权-----
 [.上传图片] 上传自定义背景
 '''.strip())
-
+# 限频器 10S冷却
 _freq_lmt = FreqLimiter(10)
 
 
@@ -152,6 +151,7 @@ async def query_player1(bot, ev):
 #         mes = [message, message2, message3]
 #     return mes
 # 解决物品名称过长溢出问题
+# 物品名称过滤，将过长物品名将简化
 obj_filter = {
     "AH-64GX Apache Warchief": "Apache Warchief",
     "GOL Sniper Magnum": "GOL Magnum",
@@ -275,6 +275,7 @@ async def query_vehicles(bot, ev):
     server_name = ev.message.extract_plain_text().strip()
     await bot.send(ev, '查询时间较长，请耐心等待...')
     try:
+        # 获取服务器信息列表
         mes = await get_server_list(server_name)
     except Exception as err:
         mes = f"异常:{err}"

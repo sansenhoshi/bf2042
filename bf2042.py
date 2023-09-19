@@ -243,7 +243,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
             final = "Pro哥\n爱吃薯条，容易“**”"
             color = "gold"
         else:
-            final = "薯薯\n别拷打我了哥"
+            final = "薯薯\n别拷打我了哥😭"
             color = "skyblue"
 
     ch_text_font_ext = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
@@ -254,7 +254,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 添加BF ban 检测结果
     bf_ban_res = await get_bf_ban_check(data["userName"], data["userId"], data["id"])
     draw.text((1485, 350), f'联BAN查询：', fill="white", font=ch_text_font_ext)
-    draw.text((1485, 360), f'\n{bf_ban_res}', fill="white", font=ch_text_font_ext2)
+    draw.text((1485, 360), f'\n{bf_ban_res}', fill="yellow", font=ch_text_font_ext2)
 
     # 11.绘制第三部分 TOP4武器/载具 947.5-12.5
     new_img = draw_rect(new_img, (25, 480, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))
