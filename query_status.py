@@ -182,9 +182,13 @@ async def query_data(player, platform):
                 result = json.loads(rest)
                 return result
         except asyncio.TimeoutError as e:
-            return f"请求超时：{e}"
+            if e:
+                return f"请求超时：{e}"
+            return f"请求超时：玩家数据请求超时"
         except aiohttp.ClientError as e:
-            return f"请求异常：{e}"
+            if e:
+                return f"请求异常：{e}"
+            return f"请求异常：玩家数据请求异常"
 
 
 async def check_user_status(username):
