@@ -4,12 +4,11 @@ import os
 import random
 import time
 from io import BytesIO
-
+import requests.exceptions
 import aiohttp
 import qrcode
 import requests
 from PIL import Image, ImageDraw, ImageFont
-
 
 filepath = os.path.dirname(__file__).replace("\\", "/")
 bf_ban_url = "https://api.gametools.network/bfban/checkban"
@@ -288,12 +287,27 @@ def paste_ic_logo(img):
 
 # 获取EA头像
 async def get_avatar(platform_id, persona_id, nucleus_id):
-    url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers={'accept': 'application/json'}) as response:
-            if response.status == 200:
+    default_avatar_path = filepath + "/img/No-Pats.png"
+    try:
+        url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers={'accept': 'application/json'}) as response:
+                response.raise_for_status()
                 data = json.loads(await response.text())
-                avatar = data['avatar']
-                return avatar
-            else:
-                raise Exception(f"Error: {response.status}")
+                avatar_url = data.get('avatar')
+                print("头像URL处理"+avatar_url)
+                if avatar_url:
+                    try:
+                        # 添加10s超时判断，如果超时直接使用默认头像
+                        res = BytesIO(requests.get(avatar_url, timeout=10).content)
+                        avatar = Image.open(res).convert('RGBA')
+                        return avatar
+                    except requests.exceptions.RequestException as e:
+                        print(f"请求异常：{e}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"请求异常：{e}")
+
+    # 使用默认头像
+    avatar = Image.open(default_avatar_path).convert('RGBA')
+    return avatar

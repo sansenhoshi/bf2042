@@ -53,10 +53,6 @@ bf_ban_url = "https://api.gametools.network/bfban/checkban"
 
 
 async def bf_2042_gen_pic(data, platform, bot, ev):
-    # 检查玩家是否存在
-    if "userName" not in data:
-        mes = "未找到该玩家"
-        return mes
     # 1.创建黑色板块 1920*1080
     new_img = Image.new('RGBA', (1920, 1080), (0, 0, 0, 1000))
     # 2.获取头像图片 150*150
@@ -64,20 +60,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     nucleus_id = data['userId']
     persona_id = data['id']
     # 调用接口获取正确的头像
-    avatar_url = await get_avatar(platform_id, persona_id, nucleus_id)
-    print("头像URL处理：" + avatar_url)
-    avatar = Image.open(filepath + "/img/class_icon/No-Pats.png").convert('RGBA')
-    # 添加异常处理
-    try:
-        if not avatar_url == "":
-            res = BytesIO(requests.get(avatar_url).content)
-            avatar = Image.open(res)
-    except requests.exceptions.RequestException as e:
-        print(f"请求异常：{e}")
-        # 在这里添加适当的错误处理，例如使用默认头像或尝试其他方法获取头像
-    except Exception as e:
-        print(f"其他异常：{e}")
-        # 在这里添加适当的错误处理，例如使用默认头像或尝试其他方法获取头像
+    avatar = await get_avatar(platform_id, persona_id, nucleus_id)
     avatar = png_resize(avatar, new_width=145, new_height=145)
     avatar = circle_corner(avatar, 10)
     # 3.获取背景 并 模糊

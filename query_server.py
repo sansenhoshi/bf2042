@@ -42,32 +42,45 @@ region = {
     "Africa": "非洲",
     "Oceania": "大洋洲"
 }
-import aiohttp
+
 
 
 async def get_server_list(server_name):
-    url = f"https://api.gametools.network/bf2042/servers/?name=&experiencename={server_name}&region=all&limit=5&platform=pc"
-    server_info = "服务器信息\n"
+    url = f"https://api.gametools.network/bf2042/detailedserver/?name={server_name}&experiencename={server_name}&return_ownername=true&lang=zh-cn"
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            data = await response.json()
-            data = sorted(data["servers"], key=lambda k: k['playerAmount'], reverse=True)
-            for server in data:
-                server_prefix = server["prefix"]
-                server_max_player = server["maxPlayers"]
-                server_current_number = server["playerAmount"]
-                server_mode = server["mode"]
-                server_max_que = server["maxQue"]
-                server_in_que = server["inQue"]
-                server_current_map = server["currentMap"]
-                server_region = server["region"]
-                server_info += f"\n----------" \
-                               f"\n服务器名称：{server_prefix}" \
-                               f"\n游戏模式：{game_mode[server_mode]}" \
-                               f"\n当前地图：{map_list[server_current_map]}" \
-                               f"\n最大游玩人数：{server_max_player}" \
-                               f"\n在线人数：{server_current_number}" \
-                               f"\n最大队列人数：{server_max_que}" \
-                               f"\n当前队列人数：{server_in_que}" \
-                               f"\n地区：{region[server_region]}\n"
-    return server_info
+        async with session.request("GET", url) as response:
+            server_info = await response.json()
+            owner_info = server_info["owner"]
+            owner_name = owner_info["name"]
+            owners = [owner_info]
+            # 使用服务器owner信息获取服务器其他信息
+            owners = json.dumps(owners)
+            url = f"https://api.gametools.network/bf2042/servers/?owners={owners}"
+            server_message = "服务器信息\n"
+            async with aiohttp.ClientSession() as session2:
+                async with session2.get(url) as response:
+                    data = await response.json()
+                    # 依照在线人数排序
+                    data = sorted(data["servers"], key=lambda k: k['playerAmount'], reverse=True)
+                    for server in data:
+                        server_prefix = server["prefix"]
+                        server_max_player = server["maxPlayers"]
+                        server_current_number = server["playerAmount"]
+                        server_mode = server["mode"]
+                        server_max_que = server["maxQue"]
+                        server_in_que = server["inQue"]
+                        server_current_map = server["currentMap"]
+                        server_region = server["region"]
+                        server_message += f"\n----------" \
+                                          f"\n服务器名称：{server_prefix}" \
+                                          f"\n游戏模式：{game_mode[server_mode]}" \
+                                          f"\n当前地图：{map_list[server_current_map]}" \
+                                          f"\n最大游玩人数：{server_max_player}" \
+                                          f"\n在线人数：{server_current_number}" \
+                                          f"\n最大队列人数：{server_max_que}" \
+                                          f"\n当前队列人数：{server_in_que}" \
+                                          f"\n地区：{region[server_region]}" \
+                                          f"\n创建者：{owner_name}" \
+                                          f"\n----------"
+            print(server_message)
+        return server_message
