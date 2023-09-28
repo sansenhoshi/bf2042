@@ -4,7 +4,6 @@ import random
 from decimal import Decimal
 from io import BytesIO
 
-import requests
 from PIL import Image, ImageDraw, ImageFont
 from hoshino.modules.bf2042.data_tools import hacker_check, get_bf_ban_check
 from hoshino.modules.bf2042.picture_tools import draw_rect, circle_corner, get_class_type, png_resize, \
@@ -175,43 +174,68 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     new_img = draw_rect(new_img, (25, 205, 1920 - 25, 455), 10, fill=(0, 0, 0, 150))
     ch_text_font3 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
     en_text_font3 = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 36)
+    # 处理击杀玩家的百分比
+    kill_human_per = data["humanPrecentage"]
+    kill_human_per = float(kill_human_per.strip('%')) / 100
+    # kd
     kd = data["killDeath"]
-    real_kd = data["infantryKillDeath"]
+    # 四舍五入计算真实KD
+    real_kd = round(kill_human_per * kd, 2)
+    # 击杀数
     kills = data["kills"]
+    # kpm
     kpm = data["killsPerMinute"]
+    # 真实kpm
+    real_kpm = round(kill_human_per * kpm, 2)
+    # 步战kd
+    infantryKillDeath = data["infantryKillDeath"]
+    # 场均击杀
     k_per_match = data["killsPerMatch"]
+    # 爆头率
     hs = data["headshots"]
+    # 命中率
     acc = data["accuracy"]
+    # 胜场
     win = data["winPercent"]
+    # 人类百分比
     human_per = data["humanPrecentage"]
+    # AI击杀数量
     AI_kill = kills - int(kills * float(human_per.replace("%", "")) / 100 + 0.55)
+    # 阵亡
     deaths = data["deaths"]
+    # 急救
     revives = data["revives"]
+    # 标记敌人数
     eme = data["enemiesSpotted"]
+    # 摧毁载具数量
+    vehiclesDestroyed = data["vehiclesDestroyed"]
     # 数据1
-    draw.text((150, 235), f'K/D： {kd}', fill='white', font=ch_text_font3)
-    draw.text((150, 280), f'真实 K/D： {real_kd}', fill='white', font=ch_text_font3)
-    draw.text((150, 325), f'击杀： {kills}', fill='white', font=ch_text_font3)
-    draw.text((150, 370), f'死亡数： {deaths}', fill='white', font=ch_text_font3)
+    draw.text((150, 220), f'K/D： {kd}', fill='white', font=ch_text_font3)
+    draw.text((150, 265), f'真实 K/D： {real_kd}', fill='white', font=ch_text_font3)
+    draw.text((150, 310), f'击杀： {kills}', fill='white', font=ch_text_font3)
+    draw.text((150, 355), f'死亡数： {deaths}', fill='white', font=ch_text_font3)
+    draw.text((150, 400), f'真实KPM： {real_kpm}', fill='white', font=ch_text_font3)
 
     # 数据2
-    draw.text((550, 235), f'KPM： {kpm}', fill='white', font=ch_text_font3)
-    draw.text((550, 280), f'爆头率： {hs}', fill='white', font=ch_text_font3)
-    draw.text((550, 325), f'命中率： {acc}', fill='white', font=ch_text_font3)
-    draw.text((550, 370), f'胜率： {win}', fill='white', font=ch_text_font3)
+    draw.text((550, 220), f'击杀/分钟(KPM)： {kpm}', fill='white', font=ch_text_font3)
+    draw.text((550, 265), f'爆头率： {hs}', fill='white', font=ch_text_font3)
+    draw.text((550, 310), f'命中率： {acc}', fill='white', font=ch_text_font3)
+    draw.text((550, 355), f'胜率： {win}', fill='white', font=ch_text_font3)
+    draw.text((550, 400), f'标记敌人数： {eme}', fill='white', font=ch_text_font3)
 
     # 数据3
-    draw.text((950, 235), f'AI击杀： {AI_kill}', fill='white', font=ch_text_font3)
-    draw.text((950, 280), f'场均击杀： {k_per_match}', fill='white', font=ch_text_font3)
-    draw.text((950, 325), f'急救数： {revives}', fill='white', font=ch_text_font3)
-    draw.text((950, 370), f'发现敌人数： {eme}', fill='white', font=ch_text_font3)
+    draw.text((950, 220), f'AI击杀： {AI_kill}', fill='white', font=ch_text_font3)
+    draw.text((950, 265), f'场均击杀： {k_per_match}', fill='white', font=ch_text_font3)
+    draw.text((950, 310), f'急救数： {revives}', fill='white', font=ch_text_font3)
+    draw.text((950, 355), f'步战kd： {infantryKillDeath}', fill='white', font=ch_text_font3)
+    draw.text((950, 400), f'摧毁载具数： {vehiclesDestroyed}', fill='white', font=ch_text_font3)
 
     # 数据4 BF TRACKER个人主页
-    en_text_font_ext = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 24)
-    qr_img = qr_code_gen(player_name, platform)
-    qr_img = qr_img.resize((145, 145))
-    draw.text((1300, 228), "BATTLEFIELD\n    TRACKER", fill="lightgreen", font=en_text_font_ext)
-    new_img.paste(qr_img, (1300, 290))
+    # en_text_font_ext = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 24)
+    # qr_img = qr_code_gen(player_name, platform)
+    # qr_img = qr_img.resize((145, 145))
+    # draw.text((1300, 228), "BATTLEFIELD\n    TRACKER", fill="lightgreen", font=en_text_font_ext)
+    # new_img.paste(qr_img, (1300, 290))
 
     weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
 
@@ -222,8 +246,8 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     check_res = False
 
     if 3 in hacker_check_res:
-        final = "挂钩"
-        color = "red"
+        final = "鉴定为红橙黄绿蓝紫\n没有青吗？"
+        color = "#FF9999"
         check_res = True
     elif 2 in hacker_check_res:
         final = "挂？\n样本太少了"
@@ -240,21 +264,21 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     if not check_res:
         # kpm大于1 总kd大于2 真实kd大于1.5
         if kpm > 1.00 and kd > 2 and real_kd > 1.5:
-            final = "Pro哥\n爱吃薯条，容易“**”"
+            final = "Pro哥\n你带我走吧T_T"
             color = "gold"
         else:
-            final = "薯薯\n别拷打我了哥😭"
+            final = "薯薯\n别拷打我了哥>_<"
             color = "skyblue"
 
     ch_text_font_ext = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
     ch_text_font_ext2 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 28)
-    draw.text((1485, 228), f'鉴定结果（仅供参考）：', fill="white", font=ch_text_font_ext)
-    draw.text((1485, 238), f'\n{final}', fill=f"{color}", font=ch_text_font_ext2)
+    draw.text((1300, 220), f'机器棱鉴定结果（仅供参考）：', fill="white", font=ch_text_font_ext)
+    draw.text((1300, 240), f'\n{final}', fill=f"{color}", font=ch_text_font_ext2)
 
     # 添加BF ban 检测结果
     bf_ban_res = await get_bf_ban_check(data["userName"], data["userId"], data["id"])
-    draw.text((1485, 350), f'联BAN查询：', fill="white", font=ch_text_font_ext)
-    draw.text((1485, 360), f'\n{bf_ban_res}', fill="yellow", font=ch_text_font_ext2)
+    draw.text((1300, 360), f'联BAN查询：', fill="white", font=ch_text_font_ext)
+    draw.text((1300, 380), f'\n{bf_ban_res}', fill="yellow", font=ch_text_font_ext2)
 
     # 11.绘制第三部分 TOP4武器/载具 947.5-12.5
     new_img = draw_rect(new_img, (25, 480, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))

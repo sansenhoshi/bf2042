@@ -65,7 +65,7 @@ async def get_bf_ban_check(user_name, userids, personaids):
         "personaids": personaids
     }
     headers = {'accept': 'application/json'}
-    trans = "未查询到相关封禁信息"
+    trans = "未查询到相关信息"
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers, params=params) as response:
             if response.status == 200:

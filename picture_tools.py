@@ -277,12 +277,17 @@ def paste_ic_logo(img):
     ic_logo = filepath + "/img/dev_logo/IC.png"
     # 载入字体
     en_text_font = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 18)
+    # 载入字体
+    ch_text_font = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 18)
     logo_file = Image.open(ic_logo).convert("RGBA").resize((20, 20))
     draw = ImageDraw.Draw(img)
-    img = draw_rect(img, (645, 1058, 1220, 1078), 1, fill=(0, 0, 0, 150))
-    draw.text((700, 1055), "BF2042 Player‘s Status Plugin Designed By", fill="white", font=en_text_font)
+    img = draw_rect(img, (25, 1058, 1895, 1078), 1, fill=(0, 0, 0, 150))
+    draw.text((30, 1056), "Data Source From : GAMETOOLS.NETWORK", fill="white", font=en_text_font)
+    draw.text((700, 1056), "BF2042 Player‘s Status Plugin Designed By", fill="white", font=en_text_font)
     img = image_paste(logo_file, img, (1040, 1058))
-    draw.text((1065, 1055), "SANSENHOSHI", fill="white", font=en_text_font)
+    draw.text((1065, 1056), "SANSENHOSHI", fill="skyblue", font=en_text_font)
+    draw.text((1350, 1058), "铁幕重工：224077009", fill="#99CC00", font=ch_text_font)
+    draw.text((1650, 1058), "贴吧官群：559190861", fill="#99CC00", font=ch_text_font)
     return img
 
 
