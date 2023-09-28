@@ -29,7 +29,7 @@ def hacker_check(weapon_data):
     简易外挂数据检测
     :param weapon_data: 武器数据
     :return: 返回检测的数据标记，
-    击杀数大于300切爆头率大于30小于40标记1，
+    击杀数大于100小于切爆头率大于30小于40标记1，
     击杀数大于100切爆头率大于40标记2（基本实锤）
     """
     ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm", "Crossbows", "Shotguns"]

@@ -176,7 +176,7 @@ async def query_data(player, platform):
     retry_options = ExponentialRetry(attempts=2, exceptions=(aiohttp.ClientError,))
     async with RetryClient(retry_options=retry_options) as session:
         try:
-            async with session.get(url, headers=headers, timeout=5) as response:
+            async with session.get(url, headers=headers, timeout=15) as response:
                 rest = await response.text()
                 rest = str_filter(rest)
                 result = json.loads(rest)

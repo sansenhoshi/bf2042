@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 from hoshino.modules.bf2042.data_tools import hacker_check, get_bf_ban_check
 from hoshino.modules.bf2042.picture_tools import draw_rect, circle_corner, get_class_type, png_resize, \
     get_top_object_img, \
-    qr_code_gen, image_paste, get_favorite_image, get_user_avatar, paste_ic_logo, get_avatar
+    image_paste, get_favorite_image, get_user_avatar, paste_ic_logo, get_avatar
 from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2
 
 classesList = {
@@ -212,22 +212,22 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 数据1
     draw.text((150, 220), f'K/D： {kd}', fill='white', font=ch_text_font3)
     draw.text((150, 265), f'真实 K/D： {real_kd}', fill='white', font=ch_text_font3)
-    draw.text((150, 310), f'击杀： {kills}', fill='white', font=ch_text_font3)
-    draw.text((150, 355), f'死亡数： {deaths}', fill='white', font=ch_text_font3)
-    draw.text((150, 400), f'真实KPM： {real_kpm}', fill='white', font=ch_text_font3)
+    draw.text((150, 310), f'步战 K/D： {infantryKillDeath}', fill='white', font=ch_text_font3)
+    draw.text((150, 355), f'击杀： {kills}', fill='white', font=ch_text_font3)
+    draw.text((150, 400), f'死亡数： {deaths}', fill='white', font=ch_text_font3)
 
     # 数据2
-    draw.text((550, 220), f'击杀/分钟(KPM)： {kpm}', fill='white', font=ch_text_font3)
-    draw.text((550, 265), f'爆头率： {hs}', fill='white', font=ch_text_font3)
-    draw.text((550, 310), f'命中率： {acc}', fill='white', font=ch_text_font3)
-    draw.text((550, 355), f'胜率： {win}', fill='white', font=ch_text_font3)
-    draw.text((550, 400), f'标记敌人数： {eme}', fill='white', font=ch_text_font3)
+    draw.text((550, 220), f'KPM： {kpm}', fill='white', font=ch_text_font3)
+    draw.text((550, 265), f'真实KPM： {real_kpm}', fill='white', font=ch_text_font3)
+    draw.text((550, 310), f'爆头率： {hs}', fill='white', font=ch_text_font3)
+    draw.text((550, 355), f'命中率： {acc}', fill='white', font=ch_text_font3)
+    draw.text((550, 400), f'胜率： {win}', fill='white', font=ch_text_font3)
 
     # 数据3
     draw.text((950, 220), f'AI击杀： {AI_kill}', fill='white', font=ch_text_font3)
     draw.text((950, 265), f'场均击杀： {k_per_match}', fill='white', font=ch_text_font3)
     draw.text((950, 310), f'急救数： {revives}', fill='white', font=ch_text_font3)
-    draw.text((950, 355), f'步战kd： {infantryKillDeath}', fill='white', font=ch_text_font3)
+    draw.text((950, 355), f'标记敌人数： {eme}', fill='white', font=ch_text_font3)
     draw.text((950, 400), f'摧毁载具数： {vehiclesDestroyed}', fill='white', font=ch_text_font3)
 
     # 数据4 BF TRACKER个人主页
