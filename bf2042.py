@@ -12,19 +12,19 @@ from hoshino.modules.bf2042.picture_tools import draw_rect, circle_corner, get_c
 from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2
 
 classesList = {
-    "Mackay": "麦凯",
-    "Angel": "天使",
-    "Falck": "法尔克",
-    "Paik": "白智秀",
-    "Sundance": "日舞",
-    "Dozer": "推土机",
-    "Rao": "拉奥",
-    "Lis": "莉丝",
+    "Mackay": "   麦凯",
+    "Angel": "   天使",
+    "Falck": "  法尔克",
+    "Paik": "  白智秀",
+    "Sundance": "   日舞",
+    "Dozer": "  推土机",
+    "Rao": "   拉奥",
+    "Lis": "   莉丝",
     "Irish": "爱尔兰佬",
     "Crawford": "克劳福德",
-    "Boris": "鲍里斯",
-    "Zain": "扎因",
-    "Casper": "卡斯帕",
+    "Boris": "  鲍里斯",
+    "Zain": "   扎因",
+    "Casper": "  卡斯帕",
     "Blasco": "布拉斯科",
 }
 classes_type_list = {
