@@ -4,13 +4,21 @@ import os
 import random
 import time
 from io import BytesIO
-import requests.exceptions
+
 import aiohttp
+import cairosvg
 import qrcode
 import requests
+import requests.exceptions
 from PIL import Image, ImageDraw, ImageFont
 
 filepath = os.path.dirname(__file__).replace("\\", "/")
+# 导入
+DLLS_DIR = os.path.dirname(__file__) + r"\dlls"
+os.environ["PATH"] = DLLS_DIR + ";" + os.environ["PATH"]
+# Python >= 3.8 & Python <= 3.9
+os.add_dll_directory(DLLS_DIR)
+
 # 记录URL
 bf_ban_url = "https://api.gametools.network/bfban/checkban"
 
@@ -322,3 +330,45 @@ async def get_avatar(platform_id, persona_id, nucleus_id, sv):
     # 使用默认头像
     avatar = Image.open(default_avatar_path).convert('RGBA')
     return avatar
+
+
+async def get_special_icon(special, sv):
+    """
+    获取专家头像
+    :return: 专家头像
+    """
+    """
+        获取对应物品图标
+        :param object_data: 物品数据
+        :return: 图标
+        """
+    img_url = special["image"]
+    img = Image.open(filepath + "/img/specialist_icon/No-Pats.png").convert('RGBA')
+    # object_name = "default"
+    path = filepath + "/img/specialist_icon/"
+    try:
+        icons_name = os.listdir(path)
+        character_name = special["characterName"]
+        if character_name in str(icons_name):
+            sv.logger.info(f"本地已存在{character_name}专家图标")
+            img = Image.open(f"{path}{character_name}.png").convert('RGBA')
+        else:
+            sv.logger.info(f"未检测到{character_name}专家图标，缓存至本地")
+            out_put = filepath + f"/img/specialist_icon/{character_name}.png"
+            img = await svg_to_png(img_url, out_put)
+    except Exception as err:
+        sv.logger.error(f"获取专家图标失败：{str(err)}")
+    return img
+
+
+async def svg_to_png(svg_file, png_file, width=500, height=500):
+    try:
+        # 使用 cairosvg 将 SVG 转换为 PNG，并指定输出大小
+        cairosvg.svg2png(url=svg_file,
+                         write_to=png_file,
+                         output_width=width,
+                         output_height=height)
+        character_icon = Image.open(png_file)
+        return character_icon
+    except Exception as err:
+        sv.logger.error(f"获取图标失败：{str(err)}")

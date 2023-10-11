@@ -1,6 +1,6 @@
-import aiohttp
 import json
-import asyncio
+
+import aiohttp
 
 map_list = {
     "Renewal": "涅槃（复兴）",
@@ -46,8 +46,7 @@ region = {
 }
 
 
-
-async def get_server_list(server_name):
+async def get_server_list(server_name, sv):
     url = f"https://api.gametools.network/bf2042/detailedserver/?name={server_name}&experiencename={server_name}&return_ownername=true&lang=zh-cn"
     async with aiohttp.ClientSession() as session:
         async with session.request("GET", url) as response:
@@ -84,5 +83,5 @@ async def get_server_list(server_name):
                                           f"\n地区：{region[server_region]}" \
                                           f"\n创建者：{owner_name}" \
                                           f"\n----------"
-            print(server_message)
+            sv.logger.info(server_message)
         return server_message

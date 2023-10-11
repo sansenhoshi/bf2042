@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 from hoshino.modules.bf2042.data_tools import hacker_check, get_bf_ban_check
 from hoshino.modules.bf2042.picture_tools import draw_rect, circle_corner, get_class_type, png_resize, \
     get_top_object_img, \
-    image_paste, get_favorite_image, get_user_avatar, paste_ic_logo, get_avatar
+    image_paste, get_favorite_image, get_user_avatar, paste_ic_logo, get_avatar, get_special_icon
 from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2
 
 classesList = {
@@ -139,23 +139,32 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     best_specialist = best_class["characterName"]
     # 专家击杀数
     best_specialist_kills = best_class["kills"]
-    class_type = best_class["className"]
+    # 专家kpm
+    best_specialist_kpm = best_class["kpm"]
+    # 专家kd
+    best_specialist_kill_death = best_class["killDeath"]
+    # 游玩时长
+    seconds = best_class["secondsPlayed"]
+    best_specialist_played = round(seconds / 3600, 2)
     # 专家图标
-    class_icon_path = get_class_type(class_type)
-    class_icon = Image.open(class_icon_path).convert('RGBA')
+    class_icon = await get_special_icon(best_class, sv)
     # 图像缩放
     class_icon = class_icon.resize((90, 90))
     # class_icon = png_resize(class_icon, new_width=90, new_height=90)
     # (300, 360)
     # 绘制最佳专家
+    ch_text_font_bc = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 38)
+    ch_text_font_s = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 30)
     new_img = draw_rect(new_img, (768 + 25, 25, 1318, 180), 10, fill=(0, 0, 0, 150))
-    draw.text((815, 55), '最 佳\n专 家', fill='lightgreen', font=ch_text_font)
-    # draw.rectangle([930, 35, 1020, 125], fill="black")
-    # new_img.paste(class_icon, (930, 35))
+    draw.text((815, 55), '最 佳', fill='lightgreen', font=ch_text_font_bc)
+    draw.text((815, 105), '专 家', fill='lightgreen', font=ch_text_font_bc)
     new_img = image_paste(class_icon, new_img, (930, 35))
-    draw.text((920, 130), f'{classes_type_list[class_type]}', fill='skyblue', font=ch_text_font)
-    draw.text((1050, 40), f'{classesList[best_specialist]}', fill='white', font=ch_text_font)
-    draw.text((1050, 115), f'击杀数：{best_specialist_kills}', fill='white', font=ch_text_font)
+    spec_name = classesList[best_specialist]
+    draw.text((918, 130), f'{spec_name}', fill='skyblue', font=ch_text_font_s)
+    draw.text((1050, 40), f'KD：{best_specialist_kill_death}', fill='white', font=ch_text_font_s)
+    draw.text((1050, 70), f'KPM：{best_specialist_kpm}', fill='white', font=ch_text_font_s)
+    draw.text((1050, 100), f'击杀数：{best_specialist_kills}', fill='white', font=ch_text_font_s)
+    draw.text((1050, 130), f'时长：{best_specialist_played}', fill='white', font=ch_text_font_s)
 
     # 9.MVP/最佳小队
     # 绘制最佳小队/MVP
