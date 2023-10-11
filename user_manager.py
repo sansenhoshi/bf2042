@@ -225,7 +225,6 @@ async def check_user_support(uid):
     users = result.fetchall()
     if len(users) > 0:
         if users[0][0] == 1:
-            print(users[0][0])
             flag = True
     connect.commit()
     return flag

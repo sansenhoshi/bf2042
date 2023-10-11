@@ -51,7 +51,7 @@ filepath = os.path.dirname(__file__).replace("\\", "/")
 bf_ban_url = "https://api.gametools.network/bfban/checkban"
 
 
-async def bf_2042_gen_pic(data, platform, bot, ev):
+async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     # 1.创建黑色板块 1920*1080
     new_img = Image.new('RGBA', (1920, 1080), (0, 0, 0, 1000))
     # 2.获取头像图片 150*150
@@ -59,7 +59,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     nucleus_id = data['userId']
     persona_id = data['id']
     # 调用接口获取正确的头像
-    avatar = await get_avatar(platform_id, persona_id, nucleus_id)
+    avatar = await get_avatar(platform_id, persona_id, nucleus_id, sv)
     avatar = png_resize(avatar, new_width=145, new_height=145)
     avatar = circle_corner(avatar, 10)
     # 3.获取背景 并 模糊
@@ -174,6 +174,8 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     new_img = draw_rect(new_img, (25, 205, 1920 - 25, 455), 10, fill=(0, 0, 0, 150))
     ch_text_font3 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
     en_text_font3 = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 36)
+    # 分割的击杀数据
+    divided_kills = data["dividedKills"]
     # 处理击杀玩家的百分比
     kill_human_per = data["humanPrecentage"]
     kill_human_per = float(kill_human_per.strip('%')) / 100
@@ -200,7 +202,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 人类百分比
     human_per = data["humanPrecentage"]
     # AI击杀数量
-    AI_kill = kills - int(kills * float(human_per.replace("%", "")) / 100 + 0.55)
+    AI_kill = divided_kills["ai"]
     # 阵亡
     deaths = data["deaths"]
     # 急救
@@ -209,11 +211,13 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     eme = data["enemiesSpotted"]
     # 摧毁载具数量
     vehiclesDestroyed = data["vehiclesDestroyed"]
+    # 载具击杀数
+    vehicle_kill = divided_kills["vehicle"]
     # 数据1
     draw.text((150, 220), f'K/D： {kd}', fill='white', font=ch_text_font3)
-    draw.text((150, 265), f'真实 K/D： {real_kd}', fill='white', font=ch_text_font3)
-    draw.text((150, 310), f'步战 K/D： {infantryKillDeath}', fill='white', font=ch_text_font3)
-    draw.text((150, 355), f'击杀： {kills}', fill='white', font=ch_text_font3)
+    draw.text((150, 265), f'步战 K/D： {infantryKillDeath}', fill='white', font=ch_text_font3)
+    draw.text((150, 310), f'击杀： {kills}', fill='white', font=ch_text_font3)
+    draw.text((150, 355), f'载具击杀： {vehicle_kill}', fill='white', font=ch_text_font3)
     draw.text((150, 400), f'死亡数： {deaths}', fill='white', font=ch_text_font3)
 
     # 数据2
@@ -291,7 +295,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 修饰线条
     draw.line([45, 505, 45, 585], fill="#CCFF00", width=5, joint=None)
     # draw.rectangle([50, 505, 210, 585], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[0]).resize((160, 80)), new_img, (50, 505))
+    new_img = image_paste(get_top_object_img(top_weapon_list[0], sv).resize((160, 80)), new_img, (50, 505))
     draw.text((230, 500), f'{top_weapon_list[0]["weaponName"]}', fill="white", font=en_text_font4)
     draw.text((230, 545), f'击杀：{top_weapon_list[0]["kills"]}', fill="white", font=ch_text_font4)
 
@@ -305,7 +309,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 修饰线条
     draw.line([45, 615, 45, 695], fill="#CCFF00", width=5, joint=None)
     # draw.rectangle([50, 615, 210, 695], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[1]).resize((160, 80)), new_img, (50, 615))
+    new_img = image_paste(get_top_object_img(top_weapon_list[1], sv).resize((160, 80)), new_img, (50, 615))
     draw.text((230, 610), f'{top_weapon_list[1]["weaponName"]}', fill="white", font=en_text_font4)
     draw.text((230, 655), f'击杀：{top_weapon_list[1]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((450, 610), f'爆头率：{top_weapon_list[1]["headshots"]}', fill="white", font=ch_text_font4)
@@ -317,7 +321,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 修饰线条
     draw.line([45, 725, 45, 805], fill="#CCFF00", width=5, joint=None)
     # draw.rectangle([50, 725, 210, 805], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[2]).resize((160, 80)), new_img, (50, 725))
+    new_img = image_paste(get_top_object_img(top_weapon_list[2], sv).resize((160, 80)), new_img, (50, 725))
     draw.text((230, 720), f'{top_weapon_list[2]["weaponName"]}', fill="white", font=en_text_font4)
     draw.text((230, 765), f'击杀：{top_weapon_list[2]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((450, 720), f'爆头率：{top_weapon_list[2]["headshots"]}', fill="white", font=ch_text_font4)
@@ -329,7 +333,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 修饰线条
     draw.line([45, 845, 45, 925], fill="#66CCFF", width=5, joint=None)
     # draw.rectangle([50, 845, 210, 925], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[3]).resize((160, 80)), new_img, (50, 845))
+    new_img = image_paste(get_top_object_img(top_weapon_list[3], sv).resize((160, 80)), new_img, (50, 845))
     draw.text((230, 840), f'{top_weapon_list[3]["weaponName"]}', fill="white", font=en_text_font4)
     draw.text((230, 885), f'击杀：{top_weapon_list[3]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((450, 840), f'爆头率：{top_weapon_list[3]["headshots"]}', fill="white", font=ch_text_font4)
@@ -341,7 +345,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 修饰线条
     draw.line([45, 955, 45, 1035], fill="#66CCFF", width=5, joint=None)
     # draw.rectangle([50, 955, 210, 1035], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[4]).resize((160, 80)), new_img, (50, 955))
+    new_img = image_paste(get_top_object_img(top_weapon_list[4], sv).resize((160, 80)), new_img, (50, 955))
     draw.text((230, 950), f'{top_weapon_list[4]["weaponName"]}', fill="white", font=en_text_font4)
     draw.text((230, 995), f'击杀：{top_weapon_list[4]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((450, 950), f'爆头率：{top_weapon_list[4]["headshots"]}', fill="white", font=ch_text_font4)
@@ -358,7 +362,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 绘制修饰线条
     draw.line([975, 505, 975, 585], fill="#CCFF00", width=5, joint=None)
     # draw.rectangle([980, 505, 1295, 585], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[0]).resize((320, 80)), new_img, (980, 505))
+    new_img = image_paste(get_top_object_img(top_vehicles_list[0], sv).resize((320, 80)), new_img, (980, 505))
     draw.text((1325, 500), f'{top_vehicles_list[0]["vehicleName"]}', fill="white", font=en_text_font4)
     draw.text((1325, 545), f'击杀：{top_vehicles_list[0]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((1630, 500), f'KPM：{top_vehicles_list[0]["killsPerMinute"]}', fill="white", font=ch_text_font4)
@@ -368,7 +372,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 绘制修饰线条
     draw.line([975, 615, 975, 695], fill="#CCFF00", width=5, joint=None)
     # draw.rectangle([980, 615, 1295, 695], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[1]).resize((320, 80)), new_img, (980, 615))
+    new_img = image_paste(get_top_object_img(top_vehicles_list[1], sv).resize((320, 80)), new_img, (980, 615))
     draw.text((1325, 610), f'{top_vehicles_list[1]["vehicleName"]}', fill="white", font=en_text_font4)
     draw.text((1325, 655), f'击杀：{top_vehicles_list[1]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((1630, 610), f'KPM：{top_vehicles_list[1]["killsPerMinute"]}', fill="white", font=ch_text_font4)
@@ -377,7 +381,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 绘制修饰线条
     draw.line([975, 725, 975, 805], fill="#CCFF00", width=5, joint=None)
     # draw.rectangle([980, 725, 1295, 805], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[2]).resize((320, 80)), new_img, (980, 725))
+    new_img = image_paste(get_top_object_img(top_vehicles_list[2], sv).resize((320, 80)), new_img, (980, 725))
     draw.text((1325, 720), f'{top_vehicles_list[2]["vehicleName"]}', fill="white", font=en_text_font4)
     draw.text((1325, 765), f'击杀：{top_vehicles_list[2]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((1630, 720), f'KPM：{top_vehicles_list[2]["killsPerMinute"]}', fill="white", font=ch_text_font4)
@@ -386,7 +390,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 绘制修饰线条
     draw.line([975, 845, 975, 925], fill="#66CCFF", width=5, joint=None)
     # draw.rectangle([980, 845, 1295, 925], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[3]).resize((320, 80)), new_img, (980, 845))
+    new_img = image_paste(get_top_object_img(top_vehicles_list[3], sv).resize((320, 80)), new_img, (980, 845))
     draw.text((1325, 840), f'{top_vehicles_list[3]["vehicleName"]}', fill="white", font=en_text_font4)
     draw.text((1325, 885), f'击杀：{top_vehicles_list[3]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((1630, 840), f'KPM：{top_vehicles_list[3]["killsPerMinute"]}', fill="white", font=ch_text_font4)
@@ -395,7 +399,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
     # 绘制修饰线条
     draw.line([975, 955, 975, 1035], fill="#66CCFF", width=5, joint=None)
     # draw.rectangle([980, 955, 1295, 1035], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[4]).resize((320, 80)), new_img, (980, 955))
+    new_img = image_paste(get_top_object_img(top_vehicles_list[4], sv).resize((320, 80)), new_img, (980, 955))
     draw.text((1325, 950), f'{top_vehicles_list[4]["vehicleName"]}', fill="white", font=en_text_font4)
     draw.text((1325, 995), f'击杀：{top_vehicles_list[4]["kills"]}', fill="white", font=ch_text_font4)
     draw.text((1630, 950), f'KPM：{top_vehicles_list[4]["killsPerMinute"]}', fill="white", font=ch_text_font4)
@@ -403,7 +407,8 @@ async def bf_2042_gen_pic(data, platform, bot, ev):
 
     # 添加开发团队logo
     new_img = paste_ic_logo(new_img)
-
+    # 图片处理完成 发送
+    sv.logger.info(f"玩家：{player_name}->图片处理完成")
     # 显示图片
     # new_img.show()
     b_io = BytesIO()

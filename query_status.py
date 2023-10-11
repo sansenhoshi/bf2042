@@ -1,6 +1,7 @@
+import asyncio
 import json
 import re
-import asyncio
+
 import aiohttp
 from aiohttp_retry import RetryClient, ExponentialRetry
 from hoshino import Service, aiorequests
@@ -43,7 +44,7 @@ async def query_player1(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print("用户：" + player)
+            sv.logger.info(f"用户：{player}")
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -56,7 +57,7 @@ async def query_player1(bot, ev):
             await bot.send(ev, f"{reason}")
         # 判断是否存在错误
         elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev)
+            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
             # 发送图片
             await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
 
@@ -65,10 +66,10 @@ async def query_player1(bot, ev):
             await bot.send(ev, f"异常：{reason}")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
-        print("异常：" + str(val_ee))
+        sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系机器人维护组')
-        print("异常：" + str(con_ee))
+        sv.logger.error("异常：" + str(con_ee))
 
 
 # def get_player_status(player_id, platform): try: url =
@@ -203,7 +204,7 @@ async def check_user_status(username):
     length = len(results)
     if length < 1:
         flag = True
-    print("用户状态：" + str(flag))
+    sv.logger.info(f"用户状态：{str(flag)}")
     return flag
 
 
@@ -223,7 +224,7 @@ async def query_player2(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print("用户：" + player)
+            sv.logger.info(f"用户：{player}")
         else:
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 + 你的游戏ID]")
             return
@@ -238,7 +239,7 @@ async def query_player2(bot, ev):
 
         # 判断是否存在错误
         elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev)
+            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
             # 发送图片
             await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
 
@@ -247,10 +248,10 @@ async def query_player2(bot, ev):
             await bot.send(ev, f"异常：{reason}")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
-        print("异常：" + str(val_ee))
+        sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系机器人维护组')
-        print("异常：" + str(con_ee))
+        sv.logger.error("异常：" + str(con_ee))
 
 
 # @sv.on_prefix('.2042载具')
@@ -280,7 +281,7 @@ async def query_vehicles(bot, ev):
     await bot.send(ev, '查询时间较长，请耐心等待...')
     try:
         # 获取服务器信息列表
-        mes = await get_server_list(server_name)
+        mes = await get_server_list(server_name, sv)
     except Exception as err:
         mes = f"异常:{err}"
     await bot.send(ev, mes)
@@ -301,7 +302,7 @@ async def query_player3(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print("用户：" + player)
+            sv.logger.info(f"用户：{player}")
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -315,7 +316,7 @@ async def query_player3(bot, ev):
 
         # 判断是否存在错误
         elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev)
+            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
             # 发送图片
             await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
 
@@ -324,10 +325,10 @@ async def query_player3(bot, ev):
             await bot.send(ev, f"异常：{reason}")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
-        print("异常：" + str(val_ee))
+        sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系机器人维护组')
-        print("异常：" + str(con_ee))
+        sv.logger.error("异常：" + str(con_ee))
 
 
 @sv.on_prefix('.2042xbox端战绩')
@@ -345,7 +346,7 @@ async def query_player4(bot, ev):
         flag = await check_user_bind(uid)
         if flag[1]:
             player = flag[0]
-            print("用户：" + player)
+            sv.logger.info(f"用户：{player}")
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
             return
@@ -359,7 +360,7 @@ async def query_player4(bot, ev):
 
         # 判断是否存在错误
         elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev)
+            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
             # 发送图片
             await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
 
@@ -368,10 +369,10 @@ async def query_player4(bot, ev):
             await bot.send(ev, f"异常：{reason}")
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
-        print("异常：" + str(val_ee))
+        sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系机器人维护组')
-        print("异常：" + str(con_ee))
+        sv.logger.error("异常：" + str(con_ee))
 
 
 @sv.on_prefix('.绑定')

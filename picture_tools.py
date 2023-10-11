@@ -117,14 +117,14 @@ def png_resize(source_file, new_width=0, new_height=0, resample="ANTIALIAS", ref
 
 
 # 获取物品图片
-def get_top_object_img(object_data):
+def get_top_object_img(object_data, sv):
     """
     获取对应物品图标
     :param object_data: 物品数据
+    :param sv service数据
     :return: 图标
     """
     img_url = object_data["image"]
-    print("物品URL处理：" + img_url)
     img = Image.open(filepath + "/img/object_icon/default.png").convert('RGBA')
     # object_name = "default"
     path = filepath + "/img/object_icon/"
@@ -133,15 +133,19 @@ def get_top_object_img(object_data):
         if "weaponName" in object_data:
             object_name = object_data["weaponName"]
             if object_name in str(obj_name):
+                sv.logger.info(f"本地已存在{object_name}物品图标")
                 img = Image.open(f"{path}{object_name}.png").convert('RGBA')
             else:
+                sv.logger.info(f"未检测到{object_name}物品图标，缓存至本地")
                 img = Image.open(BytesIO(requests.get(img_url).content)).convert('RGBA')
                 img.save(filepath + f"/img/object_icon/{object_name}.png")
         elif "vehicleName" in object_data:
             object_name = object_data["vehicleName"]
             if object_name in str(obj_name):
+                sv.logger.info(f"本地已存在{object_name}物品图标")
                 img = Image.open(f"{path}{object_name}.png").convert('RGBA')
             else:
+                sv.logger.info(f"未检测到{object_name}物品图标，缓存至本地")
                 img = Image.open(BytesIO(requests.get(img_url).content)).convert('RGBA')
                 img.save(filepath + f"/img/object_icon/{object_name}.png")
     except Exception as err:
@@ -293,7 +297,7 @@ def paste_ic_logo(img):
 
 
 # 获取EA头像
-async def get_avatar(platform_id, persona_id, nucleus_id):
+async def get_avatar(platform_id, persona_id, nucleus_id, sv):
     default_avatar_path = filepath + "/img/No-Pats.png"
     try:
         url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
@@ -302,7 +306,7 @@ async def get_avatar(platform_id, persona_id, nucleus_id):
                 response.raise_for_status()
                 data = json.loads(await response.text())
                 avatar_url = data.get('avatar')
-                print("头像URL处理"+avatar_url)
+                sv.logger.info("头像URL处理" + avatar_url)
                 if avatar_url:
                     try:
                         # 添加10s超时判断，如果超时直接使用默认头像
@@ -310,10 +314,10 @@ async def get_avatar(platform_id, persona_id, nucleus_id):
                         avatar = Image.open(res).convert('RGBA')
                         return avatar
                     except requests.exceptions.RequestException as e:
-                        print(f"请求异常：{e}")
+                        sv.logger.warning(f"请求异常：{e}")
 
     except requests.exceptions.RequestException as e:
-        print(f"请求异常：{e}")
+        sv.logger.warning(f"请求异常：{e}")
 
     # 使用默认头像
     avatar = Image.open(default_avatar_path).convert('RGBA')
