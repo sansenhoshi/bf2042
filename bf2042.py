@@ -162,9 +162,9 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     spec_name = classesList[best_specialist]
     draw.text((918, 130), f'{spec_name}', fill='skyblue', font=ch_text_font_s)
     draw.text((1050, 40), f'KD：{best_specialist_kill_death}', fill='white', font=ch_text_font_s)
-    draw.text((1050, 70), f'KPM：{best_specialist_kpm}', fill='white', font=ch_text_font_s)
-    draw.text((1050, 100), f'击杀数：{best_specialist_kills}', fill='white', font=ch_text_font_s)
-    draw.text((1050, 130), f'时长：{best_specialist_played}', fill='white', font=ch_text_font_s)
+    draw.text((1050, 73), f'KPM：{best_specialist_kpm}', fill='white', font=ch_text_font_s)
+    draw.text((1050, 105), f'击杀：{best_specialist_kills}', fill='white', font=ch_text_font_s)
+    draw.text((1050, 138), f'时长：{best_specialist_played}H', fill='white', font=ch_text_font_s)
 
     # 9.MVP/最佳小队
     # 绘制最佳小队/MVP
