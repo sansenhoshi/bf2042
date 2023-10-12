@@ -19,7 +19,7 @@ sv = Service('2042战绩查询', help_='''
 [.2042战绩+ID] PC战绩查询
 [.2042xbox端战绩+ID] xbox战绩查询
 [.2042ps端战绩+ID] ps战绩查询
-[.绑定+ID] 绑定游戏id到QQ（仅仅支持PC）
+[.绑定+ID] 绑定游戏ID到QQ（仅仅支持PC）
 [.修改绑定+ID] 修改绑定的游戏id
 [.2042门户+门户关键字] 查询门户服务器列表
 -----特权-----
@@ -46,7 +46,7 @@ async def query_player1(bot, ev):
             player = flag[0]
             sv.logger.info(f"用户：{player}")
         else:
-            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
+            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定 游戏id]")
             return
     await bot.send(ev, '查询中，请稍等...')
     try:
@@ -226,7 +226,7 @@ async def query_player2(bot, ev):
             player = flag[0]
             sv.logger.info(f"用户：{player}")
         else:
-            await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 + 你的游戏ID]")
+            await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
 
     await bot.send(ev, '查询中，请稍等...')
@@ -304,7 +304,7 @@ async def query_player3(bot, ev):
             player = flag[0]
             sv.logger.info(f"用户：{player}")
         else:
-            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
+            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定 游戏id]")
             return
     await bot.send(ev, '查询中，请稍等...')
     try:
@@ -348,7 +348,7 @@ async def query_player4(bot, ev):
             player = flag[0]
             sv.logger.info(f"用户：{player}")
         else:
-            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定+自己的游戏id]")
+            await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定 游戏id]")
             return
     await bot.send(ev, '查询中，请稍等...')
     try:
@@ -387,7 +387,7 @@ async def bind_player(bot, ev):
     # 检查绑定状态
     res = await check_user_bind(uid)
     if res[1]:
-        await bot.send(ev, "您已经绑定过了，如果你想修改绑定请发送：[.修改绑定+你的游戏id]")
+        await bot.send(ev, "您已经绑定过了，如果你想修改绑定请发送：[.修改绑定 你的游戏id]")
         return
     res = await bind_user(uid, player)
     await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}")
