@@ -164,7 +164,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     draw.text((1050, 40), f'KD：{best_specialist_kill_death}', fill='white', font=ch_text_font_s)
     draw.text((1050, 73), f'KPM：{best_specialist_kpm}', fill='white', font=ch_text_font_s)
     draw.text((1050, 105), f'击杀：{best_specialist_kills}', fill='white', font=ch_text_font_s)
-    draw.text((1050, 138), f'时长：{best_specialist_played}H', fill='white', font=ch_text_font_s)
+    draw.text((1050, 138), f'时长：{best_specialist_played} H', fill='white', font=ch_text_font_s)
 
     # 9.MVP/最佳小队
     # 绘制最佳小队/MVP
@@ -224,7 +224,7 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     vehicle_kill = divided_kills["vehicle"]
     # 数据1
     draw.text((150, 220), f'K/D： {kd}', fill='white', font=ch_text_font3)
-    draw.text((150, 265), f'步战 K/D： {infantryKillDeath}', fill='white', font=ch_text_font3)
+    draw.text((150, 265), f'真实 K/D： {infantryKillDeath}', fill='white', font=ch_text_font3)
     draw.text((150, 310), f'击杀： {kills}', fill='white', font=ch_text_font3)
     draw.text((150, 355), f'载具击杀： {vehicle_kill}', fill='white', font=ch_text_font3)
     draw.text((150, 400), f'死亡数： {deaths}', fill='white', font=ch_text_font3)
