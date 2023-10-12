@@ -1,0 +1,1 @@
+此文件夹存放了用于cairo库的lib文件，用于cairo库的svg转png操作
