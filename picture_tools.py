@@ -25,6 +25,14 @@ bf_ban_url = "https://api.gametools.network/bfban/checkban"
 
 # 圆角遮罩处理
 def draw_rect(img, pos, radius, **kwargs):
+    """
+    圆角遮罩处理
+    :param img: 图片
+    :param pos: 圆角位置
+    :param radius: 圆角半径
+    :param kwargs: 圆角遮罩参数
+    :return: 圆角遮罩处理后的图片
+    """
     transp = Image.new('RGBA', img.size, (0, 0, 0, 0))
     alpha_draw = ImageDraw.Draw(transp, "RGBA")
     alpha_draw.rounded_rectangle(pos, radius, **kwargs)
@@ -190,7 +198,6 @@ def qr_code_gen(player, platform):
 # 图片粘贴
 def image_paste(paste_image, under_image, pos):
     """
-
     :param paste_image: 需要粘贴的图片
     :param under_image: 底图
     :param pos: 位置（x,y）坐标
@@ -248,6 +255,12 @@ def download_url(url: str) -> bytes:
 
 # 保存用户的图片
 async def user_img_save(pic_data: bytes, uid: int):
+    """
+    保存用户的图片
+    :param pic_data: 图片数据
+    :param uid: 用户id
+    :return:
+    """
     bg_path = filepath + f"/img/bg/user/{uid}/"
     try:
         # 裁剪图片
@@ -263,6 +276,12 @@ async def user_img_save(pic_data: bytes, uid: int):
 
 # 图片裁剪
 def cut_image(pic_data: bytes, target_ratio: float):
+    """
+    裁剪图片，使宽高比为target_ratio
+    :param pic_data: 图片数据
+    :param target_ratio: 目标宽高比
+    :return: 裁剪后的图片数据
+    """
     try:
         pic_data = Image.open(BytesIO(pic_data))
         w, h = pic_data.size
@@ -285,6 +304,11 @@ def cut_image(pic_data: bytes, target_ratio: float):
 
 # 加logo
 def paste_ic_logo(img):
+    """
+    将logo贴到图片上
+    :param img:
+    :return:
+    """
     # 载入logo
     ic_logo = filepath + "/img/dev_logo/IC.png"
     # 载入字体
@@ -306,6 +330,13 @@ def paste_ic_logo(img):
 
 # 获取EA头像
 async def get_avatar(platform_id, persona_id, nucleus_id, sv):
+    """
+    :param platform_id: 平台id
+    :param persona_id: 玩家id
+    :param nucleus_id: 玩家所属集团id
+    :param sv: 服务
+    :return: 返回EA头像
+    """
     default_avatar_path = filepath + "/img/No-Pats.png"
     try:
         url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
@@ -335,6 +366,8 @@ async def get_avatar(platform_id, persona_id, nucleus_id, sv):
 async def get_special_icon(special, sv):
     """
     获取专家头像
+    :param special: 专家数据
+    :param sv:service_handler
     :return: 专家头像
     """
     """
@@ -343,8 +376,8 @@ async def get_special_icon(special, sv):
         :return: 图标
         """
     img_url = special["image"]
+    # 默认加载图
     img = Image.open(filepath + "/img/specialist_icon/No-Pats.png").convert('RGBA')
-    # object_name = "default"
     path = filepath + "/img/specialist_icon/"
     try:
         icons_name = os.listdir(path)
@@ -362,6 +395,14 @@ async def get_special_icon(special, sv):
 
 
 async def svg_to_png(svg_file, png_file, width=500, height=500):
+    """
+    将 SVG 转换为 PNG
+    :param svg_file: SVG 文件路径
+    :param png_file: PNG 文件路径
+    :param width: 输出图片宽度
+    :param height: 输出图片高度
+    :return: PNG 文件路径
+    """
     try:
         # 使用 cairosvg 将 SVG 转换为 PNG，并指定输出大小
         cairosvg.svg2png(url=svg_file,
