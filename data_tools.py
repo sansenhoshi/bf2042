@@ -1,15 +1,9 @@
-import aiohttp
-import requests
-
-import base64
 import os
-import random
-from decimal import Decimal
-from io import BytesIO
+import json
+import aiohttp
 
 filepath = os.path.dirname(__file__).replace("\\", "/")
 bf_ban_url = "https://api.gametools.network/bfban/checkban"
-
 
 ban_reason = {
     0: "未处理",
@@ -111,3 +105,54 @@ def search_field_in_json(obj, field_name):
                 return result
     else:
         return None
+
+
+async def set_approve(group_id, enable):
+    check_res = await check_approve(group_id)
+    if check_res:
+        return f"群：{group_id}已经存在与审批名单中"
+    else:
+        res = await write_list(group_id, enable)
+        if res:
+            return f"群：{group_id}已添加至审批名单中"
+        else:
+            return f"群：{group_id}添加失败"
+
+
+async def check_approve(group_id):
+    path = filepath + "/data/config.json"
+    # 读取JSON文件
+    with open(path, 'r') as f:
+        data = json.load(f)
+    # 取出特定键的值
+    white_list = data['white_list']
+    if group_id in white_list:
+        return True
+    else:
+        return False
+
+
+async def write_list(group_id, enable):
+    try:
+        path = filepath + "/data/config.json"
+        # 读取JSON文件
+        with open(path, 'r') as f:
+            data = json.load(f)
+
+        # 更新特定键的值
+        white_list = data['white_list']
+        if enable:
+            white_list.append(group_id)
+        else:
+            white_list.remove(group_id)
+        data['white_list'] = white_list
+        print(f"白名单：{white_list}")
+        # 将更新后的数据写入JSON文件
+        with open(path, 'w') as f:
+            json.dump(data, f)
+            f.flush()  # 刷新文件缓冲区
+            f.close()  # 手动关闭文件
+
+        return True
+    except Exception as e:
+        return False

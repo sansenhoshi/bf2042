@@ -1,17 +1,18 @@
 import asyncio
 import json
 import re
-
 import aiohttp
 from aiohttp_retry import RetryClient, ExponentialRetry
 from hoshino import Service, aiorequests
 from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic
+from hoshino.modules.bf2042.data_tools import *
 from hoshino.modules.bf2042.picture_tools import user_img_save
 from hoshino.modules.bf2042.query_server import get_server_list
 from hoshino.modules.bf2042.user_manager import bind_user, change_bind, check_user_bind, add_support_user, \
     query_user_bind, check_user_support
 from hoshino.util import FreqLimiter
-from nonebot import CommandSession
+from nonebot import *
+from nonebot import permission as perm
 
 sv = Service('2042战绩查询', help_='''
 -----常规-----
@@ -24,6 +25,8 @@ sv = Service('2042战绩查询', help_='''
 [.2042门户+门户关键字] 查询门户服务器列表
 -----特权-----
 [.上传图片] 上传自定义背景
+-----入群检测-----
+检测新加群的EA ID
 '''.strip())
 # 限频器 10S冷却
 _freq_lmt = FreqLimiter(10)
@@ -466,3 +469,47 @@ async def upload_img(session: CommandSession):
         await session.send("上传成功")
     except Exception as e:
         await session.send("图片保存失败")
+
+
+nb_bot = get_bot()
+
+
+@sv.on_request('group.add')
+async def data_check(session: RequestSession):
+    ev = session.event
+    self_id = session.event['self_id']
+    sub_type = session.event['sub_type']
+    group_id = session.event['group_id']
+    user_id = session.event['user_id']
+    comment = session.event['comment']
+    flag = session.event['flag']
+    mes = f"用户：{user_id} 请求加群"
+    if await check_approve(group_id):
+        if sub_type == 'add':
+            pattern = r"答案：(\w+)"
+            match = re.search(pattern, comment)
+            if match:
+                answer = match.group(1)
+                data = await query_data(answer, 'pc')
+                img_mes = await bf_2042_gen_pic(data, 'pc', nb_bot, ev, sv)
+                message = f"收到用户：{user_id}\n" \
+                          f"EA ID：{answer} 的加群申请\n" \
+                          f"数据：\n" \
+                          f"[CQ:image,file={img_mes}]"
+                print(answer)
+                await nb_bot.send_group_msg(group_id=group_id, message=message, self_id=self_id)
+        await nb_bot.send_group_msg(group_id=group_id, message=mes, self_id=self_id)
+
+
+@on_command('bf_enable', aliases=('.启用审批', '.开启审批'), permission=perm.GROUP, only_to_me=False)
+async def enable_approve(session: CommandSession):
+    group_id = session.event['group_id']
+    await set_approve(group_id, True)
+    await session.send(f'已将群{group_id} 的加群审批设置为 {True}')
+
+
+@on_command('bf_disable', aliases=('.禁用审批', '.关闭审批'), permission=perm.GROUP, only_to_me=False)
+async def disable_approve(session: CommandSession):
+    group_id = session.event['group_id']
+    await set_approve(group_id, False)
+    await session.send(f'已将群{group_id} 的加群审批设置为 {False}')
