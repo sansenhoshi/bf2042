@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+
 import aiohttp
 from aiohttp_retry import RetryClient, ExponentialRetry
 from hoshino import Service, aiorequests
@@ -429,7 +430,9 @@ async def add_white_user(bot, ev):
 
 @sv.on_prefix('.查询名单')
 async def query_user(bot, ev):
-    await query_user_bind(bot, ev)
+    num = ev.message.extract_plain_text().strip()
+    num = int(num)
+    await query_user_bind(bot, ev, num)
 
 
 # 上传图片

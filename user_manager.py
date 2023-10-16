@@ -1,5 +1,6 @@
 import os
 import sqlite3
+
 import aiohttp
 
 # 路径设置
@@ -49,19 +50,20 @@ async def add_user_bind(bot, ev):
 
 
 # 查询白名单
-async def query_user_bind(bot, ev):
+async def query_user_bind(bot, ev, page_number=1, page_size=10):
     uid = ev.user_id
     mes = "=====名单=====\n"
     if uid == bot.config.SUPERUSERS[0]:
         connect = get_db()
         cursor = connect.cursor()
-        sql = "SELECT player as 玩家名称, qq_id as QQ, platform as 平台 FROM user_bind"
+        offset = (page_number - 1) * page_size
+        sql = f"SELECT player as 玩家名称, qq_id as QQ, platform as 平台 FROM user_bind LIMIT {page_size} OFFSET {offset}"
         cursor.execute(sql)
         users = cursor.fetchall()
         connect.commit()
         for user in users:
             mes += "玩家名称：" + user[0] + "\n" + "QQ：" + user[1] + "\n" + "平台：" + user[2] + "\n\n"
-        await bot.send(ev, mes)
+        await bot.send(ev, mes + f"\n 当前页为{page_number}")
     else:
         await bot.send(ev, "无权限")
 
