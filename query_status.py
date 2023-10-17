@@ -508,7 +508,7 @@ async def data_check(session: RequestSession):
                 img_mes = await bf_2042_gen_pic(data, 'pc', nb_bot, ev, sv)
                 message = f"收到用户：{user_id}\n" \
                           f"EA ID：{answer} 的加群申请\n" \
-                          f"数据：\n" \
+                          f"玩家数据：\n" \
                           f"[CQ:image,file={img_mes}]"
                 print(answer)
                 await nb_bot.send_group_msg(group_id=group_id, message=message, self_id=self_id)

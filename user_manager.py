@@ -109,16 +109,19 @@ async def get_user_info(player_name, uid):
             index = i
             break
     if result:
-        res = result[index]
-        nucleusId = res["nucleusId"]
-        personaId = res["personaId"]
-        platform = res["platform"]
-        name = res["name"]
-        info = (name, platform, uid, nucleusId, personaId, 0)
-        return info
+        if index > -1:
+            res = result[index]
+            nucleusId = res["nucleusId"]
+            personaId = res["personaId"]
+            platform = res["platform"]
+            name = res["name"]
+            info = (name, platform, uid, nucleusId, personaId, 0)
+            return info
+        else:
+            raise ValueError("玩家数据不存在")
     else:
         # 抛出自定义异常
-        raise KeyError("nucleusId not found")
+        raise KeyError("玩家数据不存在")
 
 
 # 添加支援者专属
