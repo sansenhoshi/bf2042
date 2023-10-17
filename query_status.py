@@ -199,16 +199,27 @@ async def query_data(player, platform):
 async def check_user_status(username):
     flag = False
     url = f"https://api.gametools.network/bf2042/player/?name={username}"
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            play_status = await response.json()
-
-    results = play_status["results"]
-    length = len(results)
-    if length < 1:
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                play_status = await response.json()
+        results = play_status["results"]
+        length = len(results)
+        index = -1
+        if length < 1:
+            flag = True
+        if length > 1:
+            player_name = username.upper()
+            for i, player_info in enumerate(results):
+                if player_info['name'].upper() == player_name:
+                    index = i
+                    break
+            if index == -1:
+                flag = True
+        sv.logger.info(f"用户状态：{str(flag)}")
+    except Exception as e:
+        sv.logger.error(f"网络请求异常：{str(e)}")
         flag = True
-    sv.logger.info(f"用户状态：{str(flag)}")
     return flag
 
 
@@ -501,7 +512,8 @@ async def data_check(session: RequestSession):
                           f"[CQ:image,file={img_mes}]"
                 print(answer)
                 await nb_bot.send_group_msg(group_id=group_id, message=message, self_id=self_id)
-        await nb_bot.send_group_msg(group_id=group_id, message=mes, self_id=self_id)
+        else:
+            await nb_bot.send_group_msg(group_id=group_id, message=mes, self_id=self_id)
 
 
 @on_command('bf_enable', aliases=('.启用审批', '.开启审批'), permission=perm.GROUP, only_to_me=False)

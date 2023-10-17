@@ -93,19 +93,32 @@ async def get_user_info(player_name, uid):
         'accept': 'application/json'
     }
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            results = await response.json()
+        try:
+            async with session.get(url, headers=headers) as response:
+                results = await response.json()
+        except aiohttp.ClientError as e:
+            # 处理网络请求异常
+            print(f"网络请求异常: {e}")
+            return None
+
     result = results["results"]
+    player_name = player_name.upper()
+    index = -1
+    for i, player_info in enumerate(result):
+        if player_info['name'].upper() == player_name:
+            index = i
+            break
     if result:
-        res = result[0]
+        res = result[index]
         nucleusId = res["nucleusId"]
         personaId = res["personaId"]
         platform = res["platform"]
         name = res["name"]
         info = (name, platform, uid, nucleusId, personaId, 0)
+        return info
     else:
-        raise KeyError("nucleusId")
-    return info
+        # 抛出自定义异常
+        raise KeyError("nucleusId not found")
 
 
 # 添加支援者专属
