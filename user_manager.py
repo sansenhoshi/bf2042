@@ -57,13 +57,19 @@ async def query_user_bind(bot, ev, page_number=1, page_size=10):
         connect = get_db()
         cursor = connect.cursor()
         offset = (page_number - 1) * page_size
+        # 获取总记录数
+        cursor.execute("SELECT COUNT(*) FROM user_bind")
+        total_count = cursor.fetchone()[0]
+        # 执行查询
         sql = f"SELECT player as 玩家名称, qq_id as QQ, platform as 平台 FROM user_bind LIMIT {page_size} OFFSET {offset}"
         cursor.execute(sql)
         users = cursor.fetchall()
         connect.commit()
         for user in users:
             mes += "玩家名称：" + user[0] + "\n" + "QQ：" + user[1] + "\n" + "平台：" + user[2] + "\n\n"
-        await bot.send(ev, mes + f"\n 当前页为{page_number}")
+        # 添加总记录数信息
+        mes += f"\n 当前页为{page_number}，总记录数为{total_count}"
+        await bot.send(ev, mes)
     else:
         await bot.send(ev, "无权限")
 
