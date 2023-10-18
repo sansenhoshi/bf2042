@@ -337,7 +337,7 @@ async def get_avatar(platform_id, persona_id, nucleus_id, sv):
     :param sv: 服务
     :return: 返回EA头像
     """
-    default_avatar_path = filepath + "/img/No-Pats.png"
+    default_avatar_path = filepath + "/img/class_icon/No-Pats.png"
     try:
         url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
         async with aiohttp.ClientSession() as session:
