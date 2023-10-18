@@ -6,10 +6,10 @@ from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFont
 from hoshino.modules.bf2042.data_tools import hacker_check, get_bf_ban_check
-from hoshino.modules.bf2042.picture_tools import draw_rect, circle_corner, get_class_type, png_resize, \
+from hoshino.modules.bf2042.picture_tools import draw_rect, circle_corner, png_resize, \
     get_top_object_img, \
     image_paste, get_favorite_image, get_user_avatar, paste_ic_logo, get_avatar, get_special_icon
-from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2
+from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2, check_user_bind
 
 classesList = {
     "Mackay": "   麦凯",
@@ -58,8 +58,12 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     platform_id = 1
     nucleus_id = data['userId']
     persona_id = data['id']
-    # 调用接口获取正确的头像
-    avatar = await get_avatar(platform_id, persona_id, nucleus_id, sv)
+    # 调用接口获取正确的头像(由于某些人的自爆头像，现在获取ea头像仅对绑定用户生效，其他的一律不显示ea头像)
+    res = await check_user_bind(ev.user_id)
+    if res[1] and res[0].upper() == data["userName"].upper():
+        avatar = await get_avatar(platform_id, persona_id, nucleus_id, sv)
+    else:
+        avatar = Image.open(filepath + "/img/class_icon/No-Pats.png")
     avatar = png_resize(avatar, new_width=145, new_height=145)
     avatar = circle_corner(avatar, 10)
     # 3.获取背景 并 模糊
