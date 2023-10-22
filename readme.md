@@ -4,6 +4,7 @@
 <br>
 <br>****战绩查询****<br>
 [`.盒`+`ID`]  PC战绩查询<br><br>
+[`.数据`+`ID`]  PC战绩查询（为了Linux平台）<br><br>
 [`.2042战绩`+`ID`]  PC战绩查询<br><br>
 [`.2042xbox端战绩`+`ID`]  xbox战绩查询<br><br>
 [`.2042ps端战绩`+`ID`]  ps战绩查询<br><br>
@@ -23,14 +24,11 @@
 <br>****门户****<br>
 ~~[`.2042门户 + 门户关键字 `] 查询关键字在线人数最多的服务器~~ 暂时出了点问题，查不到服务器或者直接报错，等修复
 
-**需要安装pillow**
+**需要安装依赖**
 
-    pip install pillow
-
-**需要安装cairosvg**
-
-    pip install cairosvg
-    
+```bash
+pip install -r requirements.txt
+```
 
 **在`hoshino`的`config`文件夹中`__bot__.py`中的`MODULES_ON`部分添加`bf2042`即可**
 <br><br>
