@@ -736,7 +736,7 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
                   font=ch_text_font4)
         if i != 7:
             # 绘制虚线
-            new_img = await draw_point_line(new_img, start_point=(50, height + 90), end_point=(1820, height + 90),
+            new_img = await draw_point_line(new_img, start_point=(50, height + 90), end_point=(1870, height + 90),
                                             line_color='lightgreen')
         height += 105
         index = i
