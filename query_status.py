@@ -18,6 +18,8 @@ from nonebot import permission as perm
 sv = Service('2042战绩查询', help_='''
 -----常规-----
 [.盒+ID] PC战绩查询
+[.数据+ID] 查询文字图片版本玩家数据]
+[.武器+ID] 查询武器数据
 [.2042战绩+ID] PC战绩查询
 [.2042xbox端战绩+ID] xbox战绩查询
 [.2042ps端战绩+ID] ps战绩查询
