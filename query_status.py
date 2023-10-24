@@ -198,33 +198,6 @@ async def query_data(player, platform):
             return f"请求异常：玩家数据请求异常"
 
 
-async def check_user_status(username):
-    flag = False
-    url = f"https://api.gametools.network/bf2042/player/?name={username}"
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                play_status = await response.json()
-        results = play_status["results"]
-        length = len(results)
-        index = -1
-        if length < 1:
-            flag = True
-        if length > 1:
-            player_name = username.upper()
-            for i, player_info in enumerate(results):
-                if player_info['name'].upper() == player_name:
-                    index = i
-                    break
-            if index == -1:
-                flag = True
-        sv.logger.info(f"用户状态：{str(flag)}")
-    except Exception as e:
-        sv.logger.error(f"网络请求异常：{str(e)}")
-        flag = True
-    return flag
-
-
 @sv.on_prefix('.盒')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
@@ -487,38 +460,97 @@ async def query_player4(bot, ev):
 
 @sv.on_prefix('.绑定')
 async def bind_player(bot, ev):
+    platform = 'pc'
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     uid = ev.user_id
-    # 检查id是否存在
-    if await check_user_status(player):
-        await bot.send(ev, "ID不存在，请检查ID")
-        return
     # 检查绑定状态
     res = await check_user_bind(uid)
     if res[1]:
         await bot.send(ev, "您已经绑定过了，如果你想修改绑定请发送：[.修改绑定 你的游戏id]")
         return
-    res = await bind_user(uid, player)
-    await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}")
+    # 检查id是否存在
+    await bot.send(ev, f"收到绑定请求，正在检测 {player} 数据是否存在...请耐心等待")
+    result = await query_data(player, platform)
+    if 'userName' not in result:
+        await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+        return
+    sv.logger.info(f"绑定用户：{result['userName']}")
+    res = await bind_user(uid, player, platform)
+    img_mes = await bf_2042_simple_pic(result, platform, bot, ev, sv)
+    await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]")
+
+
+@sv.on_prefix('.PS绑定')
+async def bind_player(bot, ev):
+    platform = 'psn'
+    mes_id = ev['message_id']
+    player = ev.message.extract_plain_text().strip()
+    uid = ev.user_id
+    # 检查绑定状态
+    res = await check_user_bind(uid)
+    if res[1]:
+        await bot.send(ev, "您已经绑定过了，如果你想修改绑定请发送：[.修改绑定 你的游戏id]")
+        return
+    # 检查id是否存在
+    await bot.send(ev, f"收到绑定请求，正在检测 {player} 数据是否存在...请耐心等待")
+    result = await query_data(player, platform)
+    if 'userName' not in result:
+        await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+        return
+    sv.logger.info(f"绑定用户：{result['userName']}")
+    res = await bind_user(uid, player, platform)
+    img_mes = await bf_2042_simple_pic(result, platform, bot, ev, sv)
+    await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]")
+
+
+@sv.on_prefix('.XBOX绑定')
+async def bind_player(bot, ev):
+    platform = 'xbox'
+    mes_id = ev['message_id']
+    player = ev.message.extract_plain_text().strip()
+    uid = ev.user_id
+    # 检查绑定状态
+    res = await check_user_bind(uid)
+    if res[1]:
+        await bot.send(ev, "您已经绑定过了，如果你想修改绑定请发送：[.修改绑定 你的游戏id]")
+        return
+    # 检查id是否存在
+    await bot.send(ev, f"收到绑定请求，正在检测 {player} 数据是否存在...请耐心等待")
+    result = await query_data(player, platform)
+    if 'userName' not in result:
+        await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+        return
+    sv.logger.info(f"绑定用户：{result['userName']}")
+    res = await bind_user(uid, player, platform)
+    img_mes = await bf_2042_simple_pic(result, platform, bot, ev, sv)
+    await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]")
 
 
 @sv.on_prefix('.修改绑定')
 async def change_bind_player(bot, ev):
+    flag = await check_user_bind(ev.user_id)
+    platform = flag[2]
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     uid = ev.user_id
-    # 检查id是否存在
-    if await check_user_status(player):
-        await bot.send(ev, "ID不存在，请检查ID")
-        return
+    # 检查绑定状态
     res = await check_user_bind(uid)
     if not res[1]:
         await bot.send(ev, "您还未绑定，发送  [.绑定 您的游戏ID]  将游戏ID与你的QQ绑定")
         return
-    res = await change_bind(uid, player)
+    # 检查id是否存在
+    await bot.send(ev, f"收到修改绑定请求，正在检测 {player} 数据是否存在...请耐心等待")
+    result = await query_data(player, platform)
+    sv.logger.info(f"数据库绑定结果：{flag}")
+    if 'userName' not in result:
+        await bot.send(ev, "ID不存在，请检查ID，使用[.绑定 游戏id]")
+        return
+    sv.logger.info(f"绑定用户：{result['userName']}")
+    res = await change_bind(uid, player, res[2])
+    img_mes = await bf_2042_simple_pic(result, platform, bot, sv)
     if res:
-        await bot.send(ev, f"[CQ:reply,id={mes_id}]成功")
+        await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}成功[CQ:image,file={img_mes}]")
     else:
         await bot.send(ev, f"[CQ:reply,id={mes_id}]失败！请联系维护组")
 
