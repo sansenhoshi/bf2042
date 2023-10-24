@@ -561,7 +561,7 @@ async def bind_player(bot, ev):
             info = (name, platform, uid, nucleusId, personaId, 0)
             sv.logger.info(f"绑定用户：{result['userName']}")
             res = await bind_user(info)
-            img_mes = await bf_2042_simple_pic(result, platform, bot, ev, sv)
+            img_mes = await bf_2042_simple_pic(result, platform, bot, sv)
             await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]")
         else:
             await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
