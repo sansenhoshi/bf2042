@@ -75,12 +75,11 @@ async def query_user_bind(bot, ev, page_number=1, page_size=10):
 
 
 # 绑定用户
-async def bind_user(uid, player, platform):
+async def bind_user(info):
     mes = ''
     connect = get_db()
     cursor = connect.cursor()
     try:
-        info = await get_user_info(player, uid, platform)
         sql = 'INSERT INTO user_bind(player,platform,qq_id,nucleusId,personaId,support) VALUES (?,?,?,?,?,?);'
         cursor.execute(sql, info)
 
@@ -189,13 +188,13 @@ async def delete_user_bind(bot, ev):
         await bot.send(ev, "无权限")
 
 
-async def change_bind(uid, player, platform):
+async def change_bind(info):
     flag = False
     connect = get_db()
     cursor = connect.cursor()
     try:
-        info = await get_user_info(player, uid, platform)
         name = info[0]
+        platform = info[1]
         nucleusId = info[3]
         personaId = info[4]
         data = (name, nucleusId, personaId, platform, uid)
