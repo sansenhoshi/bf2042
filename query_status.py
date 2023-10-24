@@ -5,7 +5,7 @@ import re
 import aiohttp
 from aiohttp_retry import RetryClient, ExponentialRetry
 from hoshino import Service, aiorequests
-from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic,bf_2042_simple_pic
+from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic, bf_2042_simple_pic, bf2042_weapon
 from hoshino.modules.bf2042.data_tools import *
 from hoshino.modules.bf2042.picture_tools import user_img_save
 from hoshino.modules.bf2042.query_server import get_server_list
@@ -29,8 +29,8 @@ sv = Service('2042战绩查询', help_='''
 -----入群检测-----
 检测新加群的EA ID
 '''.strip())
-# 限频器 10S冷却
-_freq_lmt = FreqLimiter(10)
+# 限频器 30S冷却
+_freq_lmt = FreqLimiter(30)
 
 
 @sv.on_prefix('.2042战绩')
@@ -268,6 +268,53 @@ async def query_player2(bot, ev):
         await bot.send(ev, '网络异常，请联系机器人维护组')
         sv.logger.error("异常：" + str(con_ee))
 
+
+@sv.on_prefix('.武器')
+async def query_player_weapon(bot, ev):
+    mes_id = ev['message_id']
+    player = ev.message.extract_plain_text().strip()
+    uid = ev.user_id
+    if not _freq_lmt.check(uid):
+        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
+        return
+    else:
+        _freq_lmt.start_cd(uid)
+
+    platform = "pc"
+    if player == "":
+        flag = await check_user_bind(uid)
+        if flag[1]:
+            player = flag[0]
+            sv.logger.info(f"用户：{player}")
+        else:
+            await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
+            return
+
+    await bot.send(ev, '查询中，请稍等...')
+    try:
+        data = await query_data(player, platform)
+        # 检查玩家是否存在
+        if "errors" in data:
+            reason = data["errors"][0]
+            await bot.send(ev, f"{reason}")
+
+        # 判断是否存在错误
+        elif "userName" in data:
+            img_mes = await bf2042_weapon(data, platform, bot, ev, sv)
+            # 发送图片
+            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
+
+        else:
+            reason = data
+            await bot.send(ev, f"异常：{reason}")
+    except ValueError as val_ee:
+        await bot.send(ev, '接口异常，建议稍后再查')
+        sv.logger.error(f"异常：{str(val_ee)}")
+    except ConnectionError as con_ee:
+        await bot.send(ev, '网络异常，请联系机器人维护组')
+        sv.logger.error("异常：" + str(con_ee))
+
+
 @sv.on_prefix('.数据')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
@@ -313,6 +360,7 @@ async def query_player2(bot, ev):
     except ConnectionError as con_ee:
         await bot.send(ev, '网络异常，请联系机器人维护组')
         sv.logger.error("异常：" + str(con_ee))
+
 
 # @sv.on_prefix('.2042载具')
 # async def query_vehicles(bot, ev):
@@ -532,8 +580,12 @@ async def upload_img(session: CommandSession):
 
 nb_bot = get_bot()
 
+sv2 = Service('入群数据检索', help_='''
+入群检测对应ID的游戏数据检索
+'''.strip())
 
-@sv.on_request('group.add')
+
+@sv2.on_request('bf_group.add')
 async def data_check(session: RequestSession):
     ev = session.event
     self_id = session.event['self_id']
@@ -542,23 +594,35 @@ async def data_check(session: RequestSession):
     user_id = session.event['user_id']
     comment = session.event['comment']
     flag = session.event['flag']
-    mes = f"用户：{user_id} 请求加群"
+    mes = f"收到用户：{user_id} 请求加群\n{comment}"
+    mes2 = f"正在获取该用户的游戏数据~"
+    await nb_bot.send_group_msg(group_id=group_id, message=mes, self_id=self_id)
+    await nb_bot.send_group_msg(group_id=group_id, message=mes2, self_id=self_id)
     if await check_approve(group_id):
         if sub_type == 'add':
             pattern = r"答案：(\w+)"
             match = re.search(pattern, comment)
             if match:
                 answer = match.group(1)
-                data = await query_data(answer, 'pc')
-                img_mes = await bf_2042_gen_pic(data, 'pc', nb_bot, ev, sv)
-                message = f"收到用户：{user_id}\n" \
-                          f"EA ID：{answer} 的加群申请\n" \
-                          f"玩家数据：\n" \
-                          f"[CQ:image,file={img_mes}]"
-                print(answer)
-                await nb_bot.send_group_msg(group_id=group_id, message=message, self_id=self_id)
+                try:
+                    data = await query_data(answer, 'pc')
+                    img_mes = await bf_2042_gen_pic(data, 'pc', nb_bot, ev, sv)
+                    message = f"用户：“{user_id}”\n" \
+                              f"玩家：“{answer}”游戏数据：\n" \
+                              f"[CQ:image,file={img_mes}]"
+                    print(answer)
+                    await nb_bot.send_group_msg(group_id=group_id, message=message, self_id=self_id)
+                except Exception as e:
+                    await nb_bot.send_group_msg(group_id=group_id,
+                                                message=f"用户{user_id}\n数据获取失败，可能是ID不正确，"
+                                                        f"请管理员核实\n申请内容:{comment}，"
+                                                        f"查询数据时的报错{e}",
+                                                self_id=self_id)
         else:
-            await nb_bot.send_group_msg(group_id=group_id, message=mes, self_id=self_id)
+            await nb_bot.send_group_msg(group_id=group_id,
+                                        message=f"用户{user_id}\n数据获取失败，"
+                                                f"可能是ID不正确，"
+                                                f"请管理员核实\n申请内容:{comment}", self_id=self_id)
 
 
 @on_command('bf_enable', aliases=('.启用审批', '.开启审批'), permission=perm.GROUP, only_to_me=False)
