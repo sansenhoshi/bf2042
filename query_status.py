@@ -18,14 +18,17 @@ from nonebot import permission as perm
 sv = Service('2042战绩查询', help_='''
 -----常规-----
 [.盒+ID] PC战绩查询
-[.数据+ID] 查询文字图片版本玩家数据]
+[.数据+ID] 查询文字图片版本玩家数据
 [.武器+ID] 查询武器数据
 [.2042战绩+ID] PC战绩查询
-[.2042xbox端战绩+ID] xbox战绩查询
-[.2042ps端战绩+ID] ps战绩查询
 [.绑定+ID] 绑定游戏ID到QQ（仅仅支持PC）
 [.修改绑定+ID] 修改绑定的游戏id
 [.2042门户+门户关键字] 查询门户服务器列表
+-----主机-----
+[.2042xbox端战绩+ID] xbox战绩查询
+[.2042ps端战绩+ID] ps战绩查询
+[.PS绑定+ID] 绑定游戏ID到QQ（仅仅支持PS）
+[.XBOX绑定+ID] 绑定游戏ID到QQ（仅仅支持XBOX）
 -----特权-----
 [.上传图片] 上传自定义背景
 -----入群检测-----
@@ -39,12 +42,14 @@ _freq_lmt = FreqLimiter(30)
 async def query_player1(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
+    # 修改个人cd为群cd缓解接口压力
     uid = ev.user_id
-    if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒)', at_sender=True)
+    g_id = ev.group_id
+    if not _freq_lmt.check(g_id):
+        await bot.send(ev, f'[CQ:reply,id={mes_id}]冷却中，剩余时间{int(_freq_lmt.left_time(g_id)) + 1}秒，请适当使用，切勿影响正常聊天')
         return
     else:
-        _freq_lmt.start_cd(uid)
+        _freq_lmt.start_cd(g_id)
     platform = "pc"
     if player == "":
         flag = await check_user_bind(uid)
@@ -202,12 +207,14 @@ async def query_data(player, platform):
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
+    # 修改个人cd为群cd缓解接口压力
     uid = ev.user_id
-    if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
+    g_id = ev.group_id
+    if not _freq_lmt.check(g_id):
+        await bot.send(ev, f'[CQ:reply,id={mes_id}]冷却中，剩余时间{int(_freq_lmt.left_time(g_id)) + 1}秒，请适当使用，切勿影响正常聊天')
         return
     else:
-        _freq_lmt.start_cd(uid)
+        _freq_lmt.start_cd(g_id)
 
     platform = "pc"
     if player == "":
@@ -248,12 +255,14 @@ async def query_player2(bot, ev):
 async def query_player_weapon(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
+    # 修改个人cd为群cd缓解接口压力
     uid = ev.user_id
-    if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
+    g_id = ev.group_id
+    if not _freq_lmt.check(g_id):
+        await bot.send(ev, f'[CQ:reply,id={mes_id}]冷却中，剩余时间{int(_freq_lmt.left_time(g_id)) + 1}秒，请适当使用，切勿影响正常聊天')
         return
     else:
-        _freq_lmt.start_cd(uid)
+        _freq_lmt.start_cd(g_id)
 
     platform = "pc"
     if player == "":
@@ -294,12 +303,14 @@ async def query_player_weapon(bot, ev):
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
+    # 修改个人cd为群cd缓解接口压力
     uid = ev.user_id
-    if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
+    g_id = ev.group_id
+    if not _freq_lmt.check(g_id):
+        await bot.send(ev, f'[CQ:reply,id={mes_id}]冷却中，剩余时间{int(_freq_lmt.left_time(g_id)) + 1}秒，请适当使用，切勿影响正常聊天')
         return
     else:
-        _freq_lmt.start_cd(uid)
+        _freq_lmt.start_cd(g_id)
 
     platform = "pc"
     if player == "":
@@ -374,12 +385,14 @@ async def query_vehicles(bot, ev):
 async def query_player3(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
+    # 修改个人cd为群cd缓解接口压力
     uid = ev.user_id
-    if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
+    g_id = ev.group_id
+    if not _freq_lmt.check(g_id):
+        await bot.send(ev, f'[CQ:reply,id={mes_id}]冷却中，剩余时间{int(_freq_lmt.left_time(g_id)) + 1}秒，请适当使用，切勿影响正常聊天')
         return
     else:
-        _freq_lmt.start_cd(uid)
+        _freq_lmt.start_cd(g_id)
     platform = "psn"
     if player == "":
         flag = await check_user_bind(uid)
@@ -418,12 +431,14 @@ async def query_player3(bot, ev):
 async def query_player4(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
+    # 修改个人cd为群cd缓解接口压力
     uid = ev.user_id
-    if not _freq_lmt.check(uid):
-        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
+    g_id = ev.group_id
+    if not _freq_lmt.check(g_id):
+        await bot.send(ev, f'[CQ:reply,id={mes_id}]冷却中，剩余时间{int(_freq_lmt.left_time(g_id)) + 1}秒，请适当使用，切勿影响正常聊天')
         return
     else:
-        _freq_lmt.start_cd(uid)
+        _freq_lmt.start_cd(g_id)
     platform = "xbox"
     if player == "":
         flag = await check_user_bind(uid)
