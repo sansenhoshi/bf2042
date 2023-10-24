@@ -760,6 +760,8 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
         height += 105
         # 图片处理完成 发送
     player_name = data["userName"]
+    # 添加logo
+    new_img = paste_ic_logo(new_img)
     sv.logger.info(f"玩家：{player_name}->武器图片处理完成")
     # 显示图片
     # new_img.show()
