@@ -81,17 +81,16 @@ async def bind_user(uid, player, platform):
     cursor = connect.cursor()
     try:
         info = await get_user_info(player, uid, platform)
-        print(info)
+        sql = 'INSERT INTO user_bind(player,platform,qq_id,nucleusId,personaId,support) VALUES (?,?,?,?,?,?);'
+        cursor.execute(sql, info)
+
+        connect.commit()
+        if cursor.rowcount > 0:
+            mes += f"绑定成功，用户{uid}当前绑定的游戏id为：{player}"
+        return mes
     except KeyError as e:
         mes += f"异常：{e}\n"
         return mes
-    sql = 'INSERT INTO user_bind(player,platform,qq_id,nucleusId,personaId,support) VALUES (?,?,?,?,?,?);'
-    cursor.execute(sql, info)
-
-    connect.commit()
-    if cursor.rowcount > 0:
-        mes += f"绑定成功，用户{uid}当前绑定的游戏id为：{player}"
-    return mes
 
 
 async def get_user_info(player_name, uid, platform):
@@ -196,21 +195,20 @@ async def change_bind(uid, player, platform):
     cursor = connect.cursor()
     try:
         info = await get_user_info(player, uid, platform)
+        name = info[0]
+        nucleusId = info[3]
+        personaId = info[4]
+        data = (name, nucleusId, personaId, platform, uid)
+        sql = 'UPDATE user_bind SET player = ?, nucleusId = ?, personaId = ?,platform = ? WHERE qq_id = ?'
+        cursor.execute(sql, data)
+        connect.commit()
+        if cursor.rowcount > 0:
+            flag = True
+        else:
+            print("更新失败")
     except Exception as e:
         print(f"异常：{e}\n")
         return e
-    name = info[0]
-    nucleusId = info[3]
-    personaId = info[4]
-    data = (name, nucleusId, personaId, platform, uid)
-    sql = 'UPDATE user_bind SET player = ?, nucleusId = ?, personaId = ?,platform = ? WHERE qq_id = ?'
-    cursor.execute(sql, data)
-
-    connect.commit()
-    if cursor.rowcount > 0:
-        flag = True
-    else:
-        print("更新失败")
     return flag
 
 
