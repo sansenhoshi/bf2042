@@ -5,7 +5,7 @@ import re
 import aiohttp
 from aiohttp_retry import RetryClient, ExponentialRetry
 from hoshino import Service, aiorequests
-from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic
+from hoshino.modules.bf2042.bf2042 import bf_2042_gen_pic,bf_2042_simple_pic
 from hoshino.modules.bf2042.data_tools import *
 from hoshino.modules.bf2042.picture_tools import user_img_save
 from hoshino.modules.bf2042.query_server import get_server_list
@@ -268,6 +268,51 @@ async def query_player2(bot, ev):
         await bot.send(ev, '网络异常，请联系机器人维护组')
         sv.logger.error("异常：" + str(con_ee))
 
+@sv.on_prefix('.数据')
+async def query_player2(bot, ev):
+    mes_id = ev['message_id']
+    player = ev.message.extract_plain_text().strip()
+    uid = ev.user_id
+    if not _freq_lmt.check(uid):
+        await bot.send(ev, f'冷却中，剩余时间{int(_freq_lmt.left_time(uid)) + 1}秒', at_sender=True)
+        return
+    else:
+        _freq_lmt.start_cd(uid)
+
+    platform = "pc"
+    if player == "":
+        flag = await check_user_bind(uid)
+        if flag[1]:
+            player = flag[0]
+            sv.logger.info(f"用户：{player}")
+        else:
+            await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
+            return
+
+    await bot.send(ev, '查询中，请稍等...')
+    try:
+        data = await query_data(player, platform)
+        # 检查玩家是否存在
+        if "errors" in data:
+            reason = data["errors"][0]
+            await bot.send(ev, f"{reason}")
+
+        # 判断是否存在错误
+        elif "userName" in data:
+            # 解析玩家数据
+            img_mes = await bf_2042_simple_pic(data, platform, bot, sv)
+            # 发送图片
+            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
+
+        else:
+            reason = data
+            await bot.send(ev, f"异常：{reason}")
+    except ValueError as val_ee:
+        await bot.send(ev, '接口异常，建议稍后再查')
+        sv.logger.error(f"异常：{str(val_ee)}")
+    except ConnectionError as con_ee:
+        await bot.send(ev, '网络异常，请联系机器人维护组')
+        sv.logger.error("异常：" + str(con_ee))
 
 # @sv.on_prefix('.2042载具')
 # async def query_vehicles(bot, ev):

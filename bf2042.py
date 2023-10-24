@@ -3,6 +3,7 @@ import os
 import random
 from decimal import Decimal
 from io import BytesIO
+import pandas as pd
 
 from PIL import Image, ImageDraw, ImageFont
 from hoshino.modules.bf2042.data_tools import hacker_check, get_bf_ban_check
@@ -435,6 +436,133 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     new_img = paste_ic_logo(new_img)
     # 图片处理完成 发送
     sv.logger.info(f"玩家：{player_name}->图片处理完成")
+    # 显示图片
+    # new_img.show()
+    b_io = BytesIO()
+    new_img.save(b_io, format="PNG")
+    base64_str = 'base64://' + base64.b64encode(b_io.getvalue()).decode()
+    return base64_str
+
+async def bf_2042_simple_pic(data, platform, bot, sv):
+    # 基本信息
+    bestClass = data['bestClass']
+    player = data['userName']
+    kills = data['kills']
+    killDeath = data['killDeath']
+    infantryKillDeath = data['infantryKillDeath']
+    killPerMin = data['killsPerMinute']
+    headshots = data['headShots']
+    accuracy = data['accuracy']
+    playtime = data['secondsPlayed']
+    matchesPlay = data['matchesPlayed']
+    kill_AI = data['dividedKills']['ai']
+    # 处理击杀玩家的百分比
+    kill_human_per = data["humanPrecentage"]
+    kill_human_per = float(kill_human_per.strip('%')) / 100
+    # 四舍五入计算真实KD
+    real_kd = round(kill_human_per * killDeath, 2)
+    # 真实kpm
+    real_kpm = round(kill_human_per * killPerMin, 2)
+    
+    # 武器信息
+    weapons = data['weapons']
+    weapons = pd.DataFrame(weapons)
+    weapons.sort_values(by='kills', axis=0, inplace=True, ascending=False)
+    weapons = weapons.reset_index(drop=True)
+
+    #载具信息
+    vehicles = data['vehicles']
+    vehicles = pd.DataFrame(vehicles)
+    vehicles.sort_values(by='kills', axis=0, inplace=True, ascending=False)
+    vehicles = vehicles.reset_index(drop=True)
+
+    #专家信息
+    classes = data['classes']
+    classes = pd.DataFrame(classes)
+    classes.sort_values(by='kills', axis=0, inplace=True, ascending=False)
+    classes = classes.reset_index(drop=True)
+
+    ch_text_font = ImageFont.truetype(filepath + '/font/msyh.ttc', 18)
+
+    new_img = Image.new('RGBA', (750,750),(0,0,0,1000))
+    #背景
+    img = Image.open(filepath + '/img/bg/common/bf2042s6.jpg')
+    new_img.paste(img, (0,0))
+    draw = ImageDraw.Draw(new_img)
+
+    # 添加BF ban 检测结果
+    bf_ban_res = await get_bf_ban_check(data["userName"], data["userId"], data["id"])
+    draw.text((400, 16), f'联BAN查询：' + f'{bf_ban_res}', fill="#5093ff", font=ch_text_font)
+
+    # 数据5 简易检测器
+    weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
+    hacker_check_res = hacker_check(weapon_list)
+    final = "未知"
+    color = "white"
+    check_res = False
+
+    if 3 in hacker_check_res:
+        final = "鉴定为红橙黄绿蓝紫，没有青吗？(筹沙币💣)"
+        color = "#FF9999"
+        check_res = True
+    elif 2 in hacker_check_res:
+        final = "挂？样本太少了🤨"
+        color = "yellow"
+        check_res = True
+    elif 1 in hacker_check_res:
+        final = "数据不对？样本太少了🤨"
+        color = "yellow"
+        check_res = True
+    elif 0 in hacker_check_res:
+        final = "可疑？建议详查🤨"
+        color = "yellow"
+        check_res = True
+    if not check_res:
+        # kpm大于1 总kd大于2 真实kd大于1.5
+        if killPerMin > 1.00 and killDeath > 2 and real_kd > 1.5:
+            final = "Pro哥，你带我走吧T_T（薯条好吃🍟）"
+            color = "gold"
+        else:
+            final = "薯薯，别拷打我了哥>_<（KFC-VIVO-50）"
+            color = "skyblue"
+
+    draw.text((400, 0), f'{final}', fill=f"{color}", font=ch_text_font)
+
+    draw.text((5,15), '玩家名称：' + player, fill='white', font=ch_text_font)
+    draw.text((5,38), '击杀：' + str(kills) + '，KD：' + str(killDeath) + '，KPM：' + str(killPerMin) + '，步战KD：' + str(infantryKillDeath) + '，AI击杀：' + str(kill_AI) + '，真·KD：'+ str(real_kd) +'\n爆头率：' + str(headshots) + '，精准度：' + str(accuracy) + '，游玩时间：' + str(round(playtime/3600)) + '小时，游玩场数：' + str(matchesPlay) + '，真·KPM：' + str(real_kpm), fill='white', font=ch_text_font)
+    
+    draw.text((5,80), '========================武器信息========================', fill='red', font=ch_text_font)
+    for index in range(0, 10):
+        height = 100 + 20 * index
+        draw.text((5  , height), str(index + 1) + ' : ', fill='white'  , font=ch_text_font)
+        draw.text((50 , height), weapons.loc[index]['weaponName']                   , fill='white', font=ch_text_font)
+        draw.text((150, height), '击杀数：' + str(weapons.loc[index]['kills'])      , fill='white', font=ch_text_font)
+        draw.text((300, height), 'KPM：' + str(weapons.loc[index]['killsPerMinute']), fill='white', font=ch_text_font)
+        draw.text((420, height), '爆头率：' + str(weapons.loc[index]['headshots'])  , fill='white', font=ch_text_font)
+        draw.text((570, height), '精准度：' + str(weapons.loc[index]['accuracy'])   , fill='white', font=ch_text_font)
+
+    draw.text((5,300), '========================载具信息========================', fill='red', font=ch_text_font)
+    for index in range(0, 10):
+        height = 320 + 20 * index
+        draw.text((5  , height), str(index + 1) + ' : ', fill='white'  , font=ch_text_font)
+        draw.text((50 , height), vehicles.loc[index]['vehicleName'], fill='white'  , font=ch_text_font)
+        draw.text((250, height), '击杀数：' + str(vehicles.loc[index]['kills']), fill='white'  , font=ch_text_font)
+        draw.text((400, height), 'KPM：' + str(vehicles.loc[index]['killsPerMinute']), fill='white'  , font=ch_text_font)
+        draw.text((520, height), '摧毁数：' + str(vehicles.loc[index]['destroyed']), fill='white'  , font=ch_text_font)
+
+    draw.text((5,520),'========================专家信息========================', fill='red', font=ch_text_font)
+
+    for index in range(0, 10):
+        height = 540 + 20 * index
+        draw.text((5  , height), str(index + 1) + ' : ', fill='white'  , font=ch_text_font)
+        draw.text((50 , height), classesList[classes.loc[index]['characterName']], fill='white'  , font=ch_text_font)
+        draw.text((170, height), '击杀数：' + str(classes.loc[index]['kills'])  , font=ch_text_font)
+        draw.text((320, height), 'KPM：' + str(classes.loc[index]['kpm']), fill='white'  , font=ch_text_font)
+        draw.text((450, height), 'KD：' + str(classes.loc[index]['killDeath']), fill='white'  , font=ch_text_font)
+        draw.text((550, height), '游玩时间：' + str(round(classes.loc[index]['secondsPlayed']/3600)) +'小时', fill='white'  , font=ch_text_font)
+
+    # 图片处理完成 发送
+    sv.logger.info(f"玩家：{player}->图片处理完成")
     # 显示图片
     # new_img.show()
     b_io = BytesIO()
