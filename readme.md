@@ -44,6 +44,5 @@ pip install -r requirements.txt
 <br>第一次运行如果没有对应的图片会自己下载，有些东西名字太长可能会遮挡到别的内容，我也没时间详细弄了，打工人何必为难打工人呢<br>
 <br>
 <br><br>
-https://sansenhoshi.site/upload/weapon-info.png
 ![个人数据示例图](https://sansenhoshi.site/upload/67FE863E3934CCB998F735DF1966FAD6.jpg)
 ![武器数据示例图](https://sansenhoshi.site/upload/weapon-info.png)
