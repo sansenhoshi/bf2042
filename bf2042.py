@@ -745,7 +745,7 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     draw.line([950, 225, 950, 1030], fill="white", width=5, joint=None)
     # 遍历 右
     height = 220
-    for i in range(index, index + 8):
+    for i in range(index+1, index + 9):
         new_img = image_paste(get_top_object_img(top_weapon_list[i], sv).resize((160, 80)), new_img, (975, height + 5))
         draw.text((1160, height), f'{top_weapon_list[i]["weaponName"]}', fill="white", font=en_text_font4)
         draw.text((1160, height + 45), f'击杀：{top_weapon_list[i]["kills"]}', fill="white", font=ch_text_font4)
