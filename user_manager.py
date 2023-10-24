@@ -76,6 +76,8 @@ async def query_user_bind(bot, ev, page_number=1, page_size=10):
 
 # 绑定用户
 async def bind_user(info):
+    uid = info[2]
+    player = info[0]
     mes = ''
     connect = get_db()
     cursor = connect.cursor()
@@ -85,7 +87,7 @@ async def bind_user(info):
 
         connect.commit()
         if cursor.rowcount > 0:
-            mes += f"绑定成功，用户{uid}当前绑定的游戏id为：{player}"
+            mes += f"绑定成功，用户 {uid} 当前绑定的游戏id为：{player} "
         return mes
     except KeyError as e:
         mes += f"异常：{e}\n"
