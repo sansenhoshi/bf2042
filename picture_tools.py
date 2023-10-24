@@ -413,3 +413,13 @@ async def svg_to_png(svg_file, png_file, width=500, height=500):
         return character_icon
     except Exception as err:
         sv.logger.error(f"获取图标失败：{str(err)}")
+
+
+async def draw_point_line(image, start_point, end_point, line_spacing=5, line_length=10, line_width=2,
+                          line_color='white'):
+    # 创建一个绘图对象
+    draw = ImageDraw.Draw(image)
+    # 绘制虚线
+    for x in range(start_point[0], end_point[0], line_length + line_spacing):
+        draw.line([(x, start_point[1]), (x + line_length, start_point[1])], fill=line_color, width=line_width)
+    return image
