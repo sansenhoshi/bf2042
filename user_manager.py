@@ -75,12 +75,13 @@ async def query_user_bind(bot, ev, page_number=1, page_size=10):
 
 
 # 绑定用户
-async def bind_user(uid, player):
+async def bind_user(uid, player, platform):
     mes = ''
     connect = get_db()
     cursor = connect.cursor()
     try:
-        info = await get_user_info(player, uid)
+        info = await get_user_info(player, uid, platform)
+        print(info)
     except KeyError as e:
         mes += f"异常：{e}\n"
         return mes
@@ -93,34 +94,27 @@ async def bind_user(uid, player):
     return mes
 
 
-async def get_user_info(player_name, uid):
-    url = f"https://api.gametools.network/bf2042/player/?name={player_name}"
+async def get_user_info(player_name, uid, platform):
+    url = f'https://api.gametools.network/bf2042/stats/' \
+          f'?raw=false&format_values=true&name={player_name}&platform={platform}&skip_battlelog=false'
     headers = {
         'accept': 'application/json'
     }
     async with aiohttp.ClientSession() as session:
         try:
             async with session.get(url, headers=headers) as response:
-                results = await response.json()
+                result = await response.json()
         except aiohttp.ClientError as e:
             # 处理网络请求异常
             print(f"网络请求异常: {e}")
             return None
-
-    result = results["results"]
     player_name = player_name.upper()
-    index = -1
-    for i, player_info in enumerate(result):
-        if player_info['name'].upper() == player_name:
-            index = i
-            break
-    if result:
-        if index > -1:
-            res = result[index]
-            nucleusId = res["nucleusId"]
-            personaId = res["personaId"]
-            platform = res["platform"]
-            name = res["name"]
+    if "userName" in result:
+        if player_name == result['userName'].upper():
+            nucleusId = result["userId"]
+            personaId = result["id"]
+            platform = platform
+            name = result["userName"]
             info = (name, platform, uid, nucleusId, personaId, 0)
             return info
         else:
@@ -196,20 +190,20 @@ async def delete_user_bind(bot, ev):
         await bot.send(ev, "无权限")
 
 
-async def change_bind(uid, player):
+async def change_bind(uid, player, platform):
     flag = False
     connect = get_db()
     cursor = connect.cursor()
     try:
-        info = await get_user_info(player, uid)
+        info = await get_user_info(player, uid, platform)
     except Exception as e:
         print(f"异常：{e}\n")
         return e
     name = info[0]
     nucleusId = info[3]
     personaId = info[4]
-    data = (name, nucleusId, personaId, uid)
-    sql = 'UPDATE user_bind SET player = ?, nucleusId = ?, personaId = ? WHERE qq_id = ?'
+    data = (name, nucleusId, personaId, platform, uid)
+    sql = 'UPDATE user_bind SET player = ?, nucleusId = ?, personaId = ?,platform = ? WHERE qq_id = ?'
     cursor.execute(sql, data)
 
     connect.commit()
@@ -230,11 +224,13 @@ async def check_user_bind(uid):
     result = cursor.execute(sql, data)
     users = result.fetchall()
     player = ""
+    platform = 'pc'
     if len(users) > 0:
         player = users[0][0]
+        platform = users[0][1]
         flag = True
     connect.commit()
-    res = (player, flag)
+    res = (player, flag, platform)
     return res
 
 
