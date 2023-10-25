@@ -316,121 +316,51 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     ch_text_font4 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
     en_text_font4 = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 32)
 
+    # 武器部分
     top_weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
+    height = 500
+    line_height = 845
+    for i in range(0, 5):
+        # 1
+        # 修饰线条
+        if i < 3:
+            draw.line([45, height + 5, 45, height + 85], fill="#CCFF00", width=5, joint=None)
+        else:
+            draw.line([45, line_height, 45, line_height + 80], fill="#66CCFF", width=5, joint=None)
+            line_height += 110
+        new_img = image_paste(get_top_object_img(top_weapon_list[i], sv).resize((160, 80)), new_img, (50, height + 5))
+        draw.text((230, height), f'{top_weapon_list[i]["weaponName"]}', fill="white", font=en_text_font4)
+        draw.text((230, height + 45), f'击杀：{top_weapon_list[i]["kills"]}', fill="white", font=ch_text_font4)
 
-    # 1
-    # 修饰线条
-    draw.line([45, 505, 45, 585], fill="#CCFF00", width=5, joint=None)
-    # draw.rectangle([50, 505, 210, 585], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[0], sv).resize((160, 80)), new_img, (50, 505))
-    draw.text((230, 500), f'{top_weapon_list[0]["weaponName"]}', fill="white", font=en_text_font4)
-    draw.text((230, 545), f'击杀：{top_weapon_list[0]["kills"]}', fill="white", font=ch_text_font4)
+        draw.text((450, height), f'爆头率：{top_weapon_list[i]["headshots"]}', fill="white", font=ch_text_font4)
+        draw.text((450, height + 45), f'命中率：{top_weapon_list[i]["accuracy"]}', fill="white", font=ch_text_font4)
 
-    draw.text((450, 500), f'爆头率：{top_weapon_list[0]["headshots"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 545), f'命中率：{top_weapon_list[0]["accuracy"]}', fill="white", font=ch_text_font4)
-
-    draw.text((730, 500), f'KPM：{top_weapon_list[0]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 545), f'时长：{int(int(top_weapon_list[0]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
-              font=ch_text_font4)
-    # 2
-    # 修饰线条
-    draw.line([45, 615, 45, 695], fill="#CCFF00", width=5, joint=None)
-    # draw.rectangle([50, 615, 210, 695], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[1], sv).resize((160, 80)), new_img, (50, 615))
-    draw.text((230, 610), f'{top_weapon_list[1]["weaponName"]}', fill="white", font=en_text_font4)
-    draw.text((230, 655), f'击杀：{top_weapon_list[1]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 610), f'爆头率：{top_weapon_list[1]["headshots"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 655), f'命中率：{top_weapon_list[1]["accuracy"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 610), f'KPM：{top_weapon_list[1]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 655), f'时长：{int(int(top_weapon_list[1]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
-              font=ch_text_font4)
-    # 3
-    # 修饰线条
-    draw.line([45, 725, 45, 805], fill="#CCFF00", width=5, joint=None)
-    # draw.rectangle([50, 725, 210, 805], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[2], sv).resize((160, 80)), new_img, (50, 725))
-    draw.text((230, 720), f'{top_weapon_list[2]["weaponName"]}', fill="white", font=en_text_font4)
-    draw.text((230, 765), f'击杀：{top_weapon_list[2]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 720), f'爆头率：{top_weapon_list[2]["headshots"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 765), f'命中率：{top_weapon_list[2]["accuracy"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 720), f'KPM：{top_weapon_list[2]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 765), f'时长：{int(int(top_weapon_list[2]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
-              font=ch_text_font4)
-    # 4
-    # 修饰线条
-    draw.line([45, 845, 45, 925], fill="#66CCFF", width=5, joint=None)
-    # draw.rectangle([50, 845, 210, 925], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[3], sv).resize((160, 80)), new_img, (50, 845))
-    draw.text((230, 840), f'{top_weapon_list[3]["weaponName"]}', fill="white", font=en_text_font4)
-    draw.text((230, 885), f'击杀：{top_weapon_list[3]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 840), f'爆头率：{top_weapon_list[3]["headshots"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 885), f'命中率：{top_weapon_list[3]["accuracy"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 840), f'KPM：{top_weapon_list[3]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 885), f'时长：{int(int(top_weapon_list[3]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
-              font=ch_text_font4)
-    # 5
-    # 修饰线条
-    draw.line([45, 955, 45, 1035], fill="#66CCFF", width=5, joint=None)
-    # draw.rectangle([50, 955, 210, 1035], fill="black")
-    new_img = image_paste(get_top_object_img(top_weapon_list[4], sv).resize((160, 80)), new_img, (50, 955))
-    draw.text((230, 950), f'{top_weapon_list[4]["weaponName"]}', fill="white", font=en_text_font4)
-    draw.text((230, 995), f'击杀：{top_weapon_list[4]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 950), f'爆头率：{top_weapon_list[4]["headshots"]}', fill="white", font=ch_text_font4)
-    draw.text((450, 995), f'命中率：{top_weapon_list[4]["accuracy"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 950), f'KPM：{top_weapon_list[4]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((730, 995), f'时长：{int(int(top_weapon_list[4]["timeEquipped"]) / 3600 + 0.55)} H', fill="white",
-              font=ch_text_font4)
+        draw.text((730, height), f'KPM：{top_weapon_list[i]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+        draw.text((730, height + 45), f'时长：{int(int(top_weapon_list[i]["timeEquipped"]) / 3600 + 0.55)} H',
+                  fill="white",
+                  font=ch_text_font4)
+        height += 110
 
     # 分割线
     draw.line([950, 505, 950, 1030], fill="white", width=5, joint=None)
     # 载具部分
     top_vehicles_list = sorted(data["vehicles"], key=lambda k: k['kills'], reverse=True)
-    # 1
-    # 绘制修饰线条
-    draw.line([975, 505, 975, 585], fill="#CCFF00", width=5, joint=None)
-    # draw.rectangle([980, 505, 1295, 585], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[0], sv).resize((320, 80)), new_img, (980, 505))
-    draw.text((1325, 500), f'{top_vehicles_list[0]["vehicleName"]}', fill="white", font=en_text_font4)
-    draw.text((1325, 545), f'击杀：{top_vehicles_list[0]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 500), f'KPM：{top_vehicles_list[0]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 545), f'摧毁数：{top_vehicles_list[0]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
-    # draw.text((1630, 545), f'时长：{top1weapon_vehicles_time_in}h', fill="white", font=ch_text_font4)
-    # 2
-    # 绘制修饰线条
-    draw.line([975, 615, 975, 695], fill="#CCFF00", width=5, joint=None)
-    # draw.rectangle([980, 615, 1295, 695], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[1], sv).resize((320, 80)), new_img, (980, 615))
-    draw.text((1325, 610), f'{top_vehicles_list[1]["vehicleName"]}', fill="white", font=en_text_font4)
-    draw.text((1325, 655), f'击杀：{top_vehicles_list[1]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 610), f'KPM：{top_vehicles_list[1]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 655), f'摧毁数：{top_vehicles_list[1]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
-    # 3
-    # 绘制修饰线条
-    draw.line([975, 725, 975, 805], fill="#CCFF00", width=5, joint=None)
-    # draw.rectangle([980, 725, 1295, 805], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[2], sv).resize((320, 80)), new_img, (980, 725))
-    draw.text((1325, 720), f'{top_vehicles_list[2]["vehicleName"]}', fill="white", font=en_text_font4)
-    draw.text((1325, 765), f'击杀：{top_vehicles_list[2]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 720), f'KPM：{top_vehicles_list[2]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 765), f'摧毁数：{top_vehicles_list[2]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
-    # 4
-    # 绘制修饰线条
-    draw.line([975, 845, 975, 925], fill="#66CCFF", width=5, joint=None)
-    # draw.rectangle([980, 845, 1295, 925], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[3], sv).resize((320, 80)), new_img, (980, 845))
-    draw.text((1325, 840), f'{top_vehicles_list[3]["vehicleName"]}', fill="white", font=en_text_font4)
-    draw.text((1325, 885), f'击杀：{top_vehicles_list[3]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 840), f'KPM：{top_vehicles_list[3]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 885), f'摧毁数：{top_vehicles_list[3]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
-    # 5
-    # 绘制修饰线条
-    draw.line([975, 955, 975, 1035], fill="#66CCFF", width=5, joint=None)
-    # draw.rectangle([980, 955, 1295, 1035], fill="black")
-    new_img = image_paste(get_top_object_img(top_vehicles_list[4], sv).resize((320, 80)), new_img, (980, 955))
-    draw.text((1325, 950), f'{top_vehicles_list[4]["vehicleName"]}', fill="white", font=en_text_font4)
-    draw.text((1325, 995), f'击杀：{top_vehicles_list[4]["kills"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 950), f'KPM：{top_vehicles_list[4]["killsPerMinute"]}', fill="white", font=ch_text_font4)
-    draw.text((1630, 995), f'摧毁数：{top_vehicles_list[4]["vehiclesDestroyedWith"]}', fill="white", font=ch_text_font4)
+    height = 500
+    line_height = 845
+    for n in range(0, 5):
+        # 修饰线条
+        if n < 3:
+            draw.line([975, height + 5, 975, height + 85], fill="#CCFF00", width=5, joint=None)
+        else:
+            draw.line([975, line_height, 975, line_height + 80], fill="#66CCFF", width=5, joint=None)
+            line_height += 110
+        new_img = image_paste(get_top_object_img(top_vehicles_list[n], sv).resize((320, 80)), new_img, (980, height + 5))
+        draw.text((1325, height), f'{top_vehicles_list[n]["vehicleName"]}', fill="white", font=en_text_font4)
+        draw.text((1325, height + 45), f'击杀：{top_vehicles_list[n]["kills"]}', fill="white", font=ch_text_font4)
+        draw.text((1630, height), f'KPM：{top_vehicles_list[n]["killsPerMinute"]}', fill="white", font=ch_text_font4)
+        draw.text((1630, height + 45), f'摧毁数：{top_vehicles_list[n]["vehiclesDestroyedWith"]}', fill="white",
+                  font=ch_text_font4)
+        height += 110
 
     # 添加开发团队logo
     new_img = paste_ic_logo(new_img)
