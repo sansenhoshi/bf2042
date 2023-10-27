@@ -529,7 +529,6 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
         bg_name = os.listdir(filepath + "/img/bg/common/")
         index = random.randint(0, len(bg_name) - 1)
         img = Image.open(filepath + f"/img/bg/common/{bg_name[index]}").convert('RGBA').resize((1920, 1080))
-    # img_filter = img.filter(ImageFilter.GaussianBlur(radius=3))
     # 4.拼合板块+背景+logo
     new_img.paste(img, (0, 0))
     if await check_user_support2(ev.user_id, data["userName"]):
@@ -540,22 +539,10 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     logo = circle_corner(logo, 10)
     new_img = image_paste(logo, new_img, (1750, 30))
     # 5.绘制头像框 (x1,y1,x2,y2)
-    # x2 = x1+width+img_width+width
-    # y2 = y1+width+img_height+width
     draw = ImageDraw.Draw(new_img)
     new_img = draw_rect(new_img, (25, 25, 768, 180), 10, fill=(0, 0, 0, 150))
     # 6添加头像
     new_img = image_paste(avatar, new_img, (30, 30))
-    # 7.添加用户信息文字
-
-    # # 等级计算
-    # xp = data["XP"][0]["total"]
-    # unit = 93944
-    # level = int((xp \\ unit) + 0.55)
-    # color = 'white'
-    # if int((xp \\ 93944) + 0.55) > 0:
-    #     level = ('S' + str(level - 99))
-    #     color = '#FF3333'
 
     # 载入字体
     en_text_font = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 36)
@@ -572,9 +559,6 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     draw.text((208, 33), '玩家：', fill='white', font=ch_text_font)
     draw.text((308, 30), f'{player_name}', fill='white', font=en_text_font)
     # 游玩平台
-    # draw.rectangle([208, 120, 248, 160], fill="black")
-    # r, g, b, alpha = plat.split()
-    # new_img.paste(plat, (208, 120), mask=alpha)
     new_img = image_paste(plat, new_img, (208, 120))
     draw.text((260, 120), '游玩时长：', fill='white', font=ch_text_font)
     time_played = data["timePlayed"]
@@ -609,8 +593,6 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     class_icon = await get_special_icon(best_class, sv)
     # 图像缩放
     class_icon = class_icon.resize((90, 90))
-    # class_icon = png_resize(class_icon, new_width=90, new_height=90)
-    # (300, 360)
     # 绘制最佳专家
     ch_text_font_bc = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 38)
     ch_text_font_s = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 30)
