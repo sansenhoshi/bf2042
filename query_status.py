@@ -59,22 +59,20 @@ async def query_player1(bot, ev):
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定 游戏id]")
             return
-    await bot.send(ev, '查询中，请稍等...')
+    await bot.send(ev, '查询中，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-        # 判断是否存在错误
-        elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
+        if data[0]:
+            img_mes = await bf_2042_gen_pic(data[1], platform, bot, ev, sv)
+            msg = (MessageSegment.reply(mes_id), MessageSegment.image(img_mes))
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = (MessageSegment.reply(mes_id),MessageSegment.text(reason))
+            await bot.send(ev, msg)
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
         sv.logger.error(f"异常：{str(val_ee)}")
@@ -83,85 +81,6 @@ async def query_player1(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-# def get_player_status(player_id, platform): try: url =
-# f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player_id}&platform={platform}"
-# payload = {} headers = { 'accept': 'application/json' } response = requests.request("GET", url, headers=headers,
-# data=payload) result = json.loads(response.text) # 玩家ID playerName = result["userName"] # 总kd kd = result[
-# "killDeath"] # 真实kd real_kd = result["infantryKillDeath"] # KPM kpm = result["killsPerMinute"] # 胜率
-# winning_percentage = result["winPercent"] # 爆头率 headshots = result["headshots"] # 击杀数 kill = result["kills"] # 死亡数
-# death = result["deaths"] # 助攻数 assists = result["killAssists"] # 治疗 healing = result["heals"] # 急救数 revives =
-# result["revives"] # 造成伤害 damage = result["damage"] # 游玩时长 time_played = result["timePlayed"] # 最佳专家 best_class =
-# result["bestClass"]
-#
-#         top3weapon = result["weapons"]
-#
-#         out_list = sorted(top3weapon, key=lambda k: k['kills'], reverse=True)
-#         # 前三武器数据
-#         # 第一武器
-#         top1name = out_list[0]["weaponName"]
-#         top1kill = out_list[0]["kills"]
-#         top1acc = out_list[0]["accuracy"]
-#         top1hs = out_list[0]["headshots"]
-#
-#         # 第二武器
-#         top2name = out_list[1]["weaponName"]
-#         top2kill = out_list[1]["kills"]
-#         top2acc = out_list[1]["accuracy"]
-#         top2hs = out_list[1]["headshots"]
-#
-#         # 第三武器
-#         top3name = out_list[2]["weaponName"]
-#         top3kill = out_list[2]["kills"]
-#         top3acc = out_list[2]["accuracy"]
-#         top3hs = out_list[2]["headshots"]
-#
-#         # 前三载具数据 载具名 击杀数 kpm 摧毁载具数
-#         top3vehicles = result["vehicles"]
-#         vehicles_out_list = sorted(top3vehicles, key=lambda k: k['kills'], reverse=True)
-#
-#         # 第一载具
-#         vehicle1name = vehicles_out_list[0]["vehicleName"]
-#         vehicle1kill = vehicles_out_list[0]["kills"]
-#         vehicle1kpm = vehicles_out_list[0]["killsPerMinute"]
-#         vehicle1destroyed = vehicles_out_list[0]["vehiclesDestroyedWith"]
-#         # 第二载具
-#         vehicle2name = vehicles_out_list[1]["vehicleName"]
-#         vehicle2kill = vehicles_out_list[1]["kills"]
-#         vehicle2kpm = vehicles_out_list[1]["killsPerMinute"]
-#         vehicle2destroyed = vehicles_out_list[1]["vehiclesDestroyedWith"]
-#         # 第三载具
-#         vehicle3name = vehicles_out_list[2]["vehicleName"]
-#         vehicle3kill = vehicles_out_list[2]["kills"]
-#         vehicle3kpm = vehicles_out_list[2]["killsPerMinute"]
-#         vehicle3destroyed = vehicles_out_list[2]["vehiclesDestroyedWith"]
-#         # 挂钩检测，简易版
-#         hacker_check(out_list)
-#
-#         if 2 in hacker_check(out_list):
-#             final = random.choice(("rnm，挂钩414😓😓😓", "这人家里没户口本🤣👉🤡"))
-#         elif 1 in hacker_check(out_list):
-#             final = random.choice(("不好说，建议出他户口💻", "建议详查💻"))
-#         elif kpm > 1.00:
-#             final = random.choice(("我超，普肉鸽带带我🥰🥰🥰", "🍟：这是群里有名的Pro，请小心.jpg"))
-#         else:
-#             final = random.choice(("薯薯我呀，自卑起来了😭😭😭", "薯薯心里好苦🥲🥲", "↑这是本群有名的薯薯，请注意爱护"))
-#
-# message = f"玩家ID：{playerName}\n " \ f"总KD：{kd}\n 真实KD：{real_kd}\n KPM：{kpm}\n 胜率：{winning_percentage}\n 爆头率：{
-# headshots} \n 击杀数：{kill}\n " \ f"死亡数：{death}\n 助攻数：{assists}\n 治疗：{healing}\n 急救数：{revives}\n 造成伤害：{damage} \n
-# 游玩时长：{time_played}\n " \ f"最佳专家：{best_class} \n\n{final} \n" message2 = f"玩家ID：{playerName}\n TOP3武器数据：\n " \
-# f"武器名：{top1name}\n 击杀数：{top1kill}\n 命中率：{top1acc}\n 爆头率：{top1hs}\n\n " \ f"武器名：{top2name}\n 击杀数：{top2kill}\n 命中率：{
-# top2acc}\n 爆头率：{top2hs} \n\n " \ f"武器名：{top3name}\n 击杀数：{top3kill}\n 命中率：{top3acc}\n 爆头率：{top3hs}" message3 =
-# f"玩家ID：{playerName}\n TOP3载具数据：\n " \ f"载具名：{vehicle1name}\n 击杀数：{vehicle1kill}\n KPM：{vehicle1kpm}\n 摧毁载具数：{
-# vehicle1destroyed}\n\n " \ f"载具名：{vehicle2name}\n 击杀数：{vehicle2kill}\n KPM：{vehicle2kpm}\n 摧毁载具数：{
-# vehicle2destroyed}\n\n " \ f"载具名：{vehicle3name}\n 击杀数：{vehicle3kill}\n KPM：{vehicle3kpm}\n 摧毁载具数：{
-# vehicle3destroyed} " mes = [message, message2, message3]
-#
-#     except Exception as err:
-#         message = "错误，请检查" + str(err) + "\n"
-#         message2 = "请检查id是否正确\n"
-#         message3 = "xbox请使用.2042xbox端战绩+id\nPS请使用.2042PS端战绩+id"
-#         mes = [message, message2, message3]
-#     return mes
 # 解决物品名称过长溢出问题
 # 物品名称过滤，将过长物品名将简化
 obj_filter = {
@@ -185,22 +104,31 @@ async def query_data(player, platform):
     headers = {
         'accept': 'application/json'
     }
+    res = (False, "数据请求失败喵")
     retry_options = ExponentialRetry(attempts=2, exceptions=(aiohttp.ClientError,))
     async with RetryClient(retry_options=retry_options) as session:
         try:
             async with session.get(url, headers=headers, timeout=15) as response:
                 rest = await response.text()
                 rest = str_filter(rest)
-                result = json.loads(rest)
-                return result
+                if response.status == 200:
+                    result = json.loads(rest)
+                    # 判断是否查询到玩家数据
+                    if 'userName' not in result:
+                        res = (False, "未查询到该玩家")
+                    else:
+                        res = (True, result)
         except asyncio.TimeoutError as e:
             if e:
-                return f"请求超时：{e}"
-            return f"请求超时：玩家数据请求超时"
+                res = (False, f"请求超时：{e}")
+            else:
+                res = (False, f"请求超时：玩家数据请求超时")
         except aiohttp.ClientError as e:
             if e:
-                return f"请求异常：{e}"
-            return f"请求异常：玩家数据请求异常"
+                res = (False, f"请求异常：{e}")
+            else:
+                res = (False, f"请求异常：玩家数据请求异常")
+    return res
 
 
 @sv.on_prefix('.盒')
@@ -226,23 +154,20 @@ async def query_player2(bot, ev):
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
 
-    await bot.send(ev, '查询中，请稍等...')
+    await bot.send(ev, '查询中，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
+        if data[0]:
+            img_mes = await bf_2042_gen_pic(data[1], platform, bot, ev, sv)
+            msg = (MessageSegment.reply(mes_id), MessageSegment.image(img_mes))
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(reason))
+            await bot.send(ev, msg)
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
         sv.logger.error(f"异常：{str(val_ee)}")
@@ -274,23 +199,20 @@ async def query_player_weapon(bot, ev):
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
 
-    await bot.send(ev, '查询中，请稍等...')
+    await bot.send(ev, '查询中，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            img_mes = await bf2042_weapon(data, platform, bot, ev, sv)
+        if data[0]:
+            img_mes = await bf_2042_gen_pic(data[1], platform, bot, ev, sv)
+            msg = (MessageSegment.reply(mes_id), MessageSegment.image(img_mes))
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(reason))
+            await bot.send(ev, msg)
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
         sv.logger.error(f"异常：{str(val_ee)}")
@@ -322,24 +244,20 @@ async def query_player2(bot, ev):
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
 
-    await bot.send(ev, '查询中，请稍等...')
+    await bot.send(ev, '查询中，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            # 解析玩家数据
-            img_mes = await bf_2042_simple_pic(data, platform, bot, sv)
+        if data[0]:
+            img_mes = await bf_2042_gen_pic(data[1], platform, bot, ev, sv)
+            msg = (MessageSegment.reply(mes_id), MessageSegment.image(img_mes))
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(reason))
+            await bot.send(ev, msg)
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
         sv.logger.error(f"异常：{str(val_ee)}")
@@ -402,23 +320,20 @@ async def query_player3(bot, ev):
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定 游戏id]")
             return
-    await bot.send(ev, '查询中，请稍等...')
+    await bot.send(ev, '查询中，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
+        if data[0]:
+            img_mes = await bf_2042_gen_pic(data[1], platform, bot, ev, sv)
+            msg = (MessageSegment.reply(mes_id), MessageSegment.image(img_mes))
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(reason))
+            await bot.send(ev, msg)
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
         sv.logger.error(f"异常：{str(val_ee)}")
@@ -448,23 +363,20 @@ async def query_player4(bot, ev):
         else:
             await bot.send(ev, "未检测到ID,请确认格式是否正确，如果你想快捷查询自己战绩，可以使用[.绑定 游戏id]")
             return
-    await bot.send(ev, '查询中，请稍等...')
+    await bot.send(ev, '查询中，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            img_mes = await bf_2042_gen_pic(data, platform, bot, ev, sv)
+        if data[0]:
+            img_mes = await bf_2042_gen_pic(data[1], platform, bot, ev, sv)
+            msg = (MessageSegment.reply(mes_id), MessageSegment.image(img_mes))
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(reason))
+            await bot.send(ev, msg)
     except ValueError as val_ee:
         await bot.send(ev, '接口异常，建议稍后再查')
         sv.logger.error(f"异常：{str(val_ee)}")
@@ -488,7 +400,7 @@ async def bind_player(bot, ev):
     await bot.send(ev, f"收到绑定请求，正在检测 {player} 数据是否存在...请耐心等待")
     result = await query_data(player, platform)
     player = player.upper()
-    if "userName" in result:
+    if result[0]:
         if player == result['userName'].upper():
             nucleusId = result["userId"]
             personaId = result["id"]
@@ -498,11 +410,14 @@ async def bind_player(bot, ev):
             sv.logger.info(f"绑定用户：{result['userName']}")
             res = await bind_user(info)
             img_mes = await bf_2042_simple_pic(result, platform, bot, ev, sv)
-            await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]")
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"绑定成功！"), MessageSegment.image(img_mes))
+            await bot.send(ev, msg)
         else:
-            await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{result[1]}，使用[.绑定 游戏id]即可完成绑定"))
+            await bot.send(ev, msg)
     else:
-        await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+        msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{result[1]}，使用[.绑定 游戏id]即可完成绑定"))
+        await bot.send(ev, msg)
 
 
 @sv.on_prefix('.PS绑定')
@@ -520,7 +435,7 @@ async def bind_player(bot, ev):
     await bot.send(ev, f"收到绑定请求，正在检测 {player} 数据是否存在...请耐心等待")
     result = await query_data(player, platform)
     player = player.upper()
-    if "userName" in result:
+    if result[0]:
         if player == result['userName'].upper():
             nucleusId = result["userId"]
             personaId = result["id"]
@@ -530,11 +445,14 @@ async def bind_player(bot, ev):
             sv.logger.info(f"绑定用户：{result['userName']}")
             res = await bind_user(info)
             img_mes = await bf_2042_simple_pic(result, platform, bot, ev, sv)
-            await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]")
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"绑定成功！"), MessageSegment.image(img_mes))
+            await bot.send(ev, msg)
         else:
-            await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{result[1]}，使用[.绑定 游戏id]即可完成绑定"))
+            await bot.send(ev, msg)
     else:
-        await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+        msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{result[1]}，使用[.绑定 游戏id]即可完成绑定"))
+        await bot.send(ev, msg)
 
 
 @sv.on_prefix('.XBOX绑定')
@@ -552,7 +470,7 @@ async def bind_player(bot, ev):
     await bot.send(ev, f"收到绑定请求，正在检测 {player} 数据是否存在...请耐心等待")
     result = await query_data(player, platform)
     player = player.upper()
-    if "userName" in result:
+    if result[0]:
         if player == result['userName'].upper():
             nucleusId = result["userId"]
             personaId = result["id"]
@@ -561,12 +479,15 @@ async def bind_player(bot, ev):
             info = (name, platform, uid, nucleusId, personaId, 0)
             sv.logger.info(f"绑定用户：{result['userName']}")
             res = await bind_user(info)
-            img_mes = await bf_2042_simple_pic(result, platform, bot, sv)
-            await bot.send(ev, f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]")
+            img_mes = await bf_2042_simple_pic(result, platform, bot, ev, sv)
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"绑定成功！"), MessageSegment.image(img_mes))
+            await bot.send(ev, msg)
         else:
-            await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+            msg = (MessageSegment.reply(mes_id),MessageSegment.text(f"{result[1]}，使用[.绑定 游戏id]即可完成绑定"))
+            await bot.send(ev, msg)
     else:
-        await bot.send(ev, "ID异常，请检查ID，请使用[.绑定 游戏id]")
+        msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{result[1]}，使用[.绑定 游戏id]即可完成绑定"))
+        await bot.send(ev, msg)
 
 
 @sv.on_prefix('.修改绑定')
@@ -586,7 +507,7 @@ async def change_bind_player(bot, ev):
     result = await query_data(player, platform)
     player = player.upper()
     sv.logger.info(f"数据库绑定结果：{flag}")
-    if "userName" in result:
+    if result[0]:
         if player == result['userName'].upper():
             nucleusId = result["userId"]
             personaId = result["id"]
@@ -597,14 +518,17 @@ async def change_bind_player(bot, ev):
             res = await change_bind(info)
             img_mes = await bf_2042_simple_pic(result, platform, bot, sv)
             if res:
-                await bot.send(ev, f"[CQ:reply,id={mes_id}] {uid} 成功修改ID {name}[CQ:image,file={img_mes}]")
+                msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{uid} 成功修改ID {name}"), MessageSegment.image(img_mes))
+                await bot.send(ev, msg)
             else:
                 await bot.send(ev, f"[CQ:reply,id={mes_id}]失败！请联系维护组")
             return info
         else:
-            await bot.send(ev, "ID异常，请检查ID，使用[.绑定 游戏id]")
+            msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{result[1]}"))
+            await bot.send(ev, msg)
     else:
-        await bot.send(ev, "ID异常，请检查ID，使用[.绑定 游戏id]")
+        msg = (MessageSegment.reply(mes_id), MessageSegment.text(f"{result[1]}"))
+        await bot.send(ev, msg)
 
 
 @sv.on_prefix('.添加名单')
@@ -680,7 +604,9 @@ async def data_check(session: RequestSession):
     user_id = session.event['user_id']
     comment = session.event['comment']
     flag = session.event['flag']
-    mes = f"收到用户：{user_id} 请求加群\n{comment}"
+    mes = f"收到用户：{user_id} \n" \
+          f"请求加群\n" \
+          f"{comment}"
     mes2 = f"正在获取该用户的游戏数据~"
     await nb_bot.send_group_msg(group_id=group_id, message=mes, self_id=self_id)
     await nb_bot.send_group_msg(group_id=group_id, message=mes2, self_id=self_id)
@@ -690,25 +616,22 @@ async def data_check(session: RequestSession):
             match = re.search(pattern, comment)
             if match:
                 answer = match.group(1)
-                try:
-                    data = await query_data(answer, 'pc')
-                    img_mes = await bf_2042_gen_pic(data, 'pc', nb_bot, ev, sv)
+                data = await query_data(answer, 'pc')
+                if data[0]:
+                    img_mes = await bf_2042_gen_pic(data[1], 'pc', nb_bot, ev, sv)
                     message = f"用户：“{user_id}”\n" \
-                              f"玩家：“{answer}”游戏数据：\n" \
-                              f"[CQ:image,file={img_mes}]"
-                    print(answer)
-                    await nb_bot.send_group_msg(group_id=group_id, message=message, self_id=self_id)
-                except Exception as e:
-                    await nb_bot.send_group_msg(group_id=group_id,
-                                                message=f"用户{user_id}\n数据获取失败，可能是ID不正确，"
-                                                        f"请管理员核实\n申请内容:{comment}，"
-                                                        f"查询数据时的报错{e}",
-                                                self_id=self_id)
-        else:
-            await nb_bot.send_group_msg(group_id=group_id,
-                                        message=f"用户{user_id}\n数据获取失败，"
-                                                f"可能是ID不正确，"
-                                                f"请管理员核实\n申请内容:{comment}", self_id=self_id)
+                              f"玩家：“{answer}”\n" \
+                              f"游戏数据：\n"
+                    msg = (MessageSegment.text(message), MessageSegment.image(img_mes))
+                    await nb_bot.send_group_msg(group_id=group_id, message=msg, self_id=self_id)
+                else:
+                    message = f"用户{user_id}\n" \
+                              f"数据获取失败，可能是ID不正确\n"\
+                              f"请管理员核实\n" \
+                              f"申请内容:{comment}，"\
+                              f"查询数据时的报错{data[1]}"
+                    msg = MessageSegment.text(message)
+                    await nb_bot.send_group_msg(group_id=group_id, message=msg, self_id=self_id)
 
 
 @on_command('bf_enable', aliases=('.启用审批', '.开启审批'), permission=perm.GROUP, only_to_me=False)
