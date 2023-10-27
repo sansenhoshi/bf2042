@@ -92,14 +92,14 @@ def get_class_type(class_type):
 
 
 # PNG重绘大小
-def png_resize(source_file, new_width=0, new_height=0, resample="ANTIALIAS", ref_file=''):
+def png_resize(source_file, new_width=0, new_height=0, resample="LANCZOS", ref_file=''):
     """
     PNG缩放透明度处理
     :param source_file: 源文件（Image.open()）
     :param new_width: 设置的宽度
     :param new_height: 设置的高度
-    :param resample:抗锯齿
-    :param ref_file:参考文件
+    :param resample: 抗锯齿
+    :param ref_file: 参考文件
     :return:
     """
     img = source_file
@@ -113,23 +113,19 @@ def png_resize(source_file, new_width=0, new_height=0, resample="ANTIALIAS", ref
         if new_height == 0:
             new_height = new_width * width / height
 
-    # img.load()
     bands = img.split()
-    if resample == "NEAREST":
-        resample = Image.NEAREST
-    else:
-        if resample == "BILINEAR":
-            resample = Image.BILINEAR
-        else:
-            if resample == "BICUBIC":
-                resample = Image.BICUBIC
-            else:
-                if resample == "ANTIALIAS":
-                    resample = Image.ANTIALIAS
-    bands = [b.resize((new_width, new_height), resample) for b in bands]
-    ResizedFile = Image.merge('RGBA', bands)
-    # return
-    return ResizedFile
+    resample_map = {
+        "NEAREST": Image.NEAREST,
+        "BILINEAR": Image.BILINEAR,
+        "BICUBIC": Image.BICUBIC,
+        "LANCZOS": Image.LANCZOS
+    }
+    resample_method = resample_map.get(resample, Image.LANCZOS)  # 默认使用 LANCZOS
+
+    bands = [b.resize((new_width, new_height), resample=resample_method) for b in bands]
+    resized_file = Image.merge('RGBA', bands)
+
+    return resized_file
 
 
 # 获取物品图片
@@ -271,7 +267,7 @@ async def user_img_save(pic_data: bytes, uid: int):
         pic_data = pic_data.resize((1920, 1080))
         pic_data.save(bg_path + str(time_now) + ".jpeg", quality=95)
     except Exception as e:
-        raise Exception("图片保存失败")
+        raise Exception(f"图片保存失败{e}")
 
 
 # 图片裁剪
@@ -299,7 +295,7 @@ def cut_image(pic_data: bytes, target_ratio: float):
         cropped = pic_data.crop((w_delta, h_delta, w - w_delta, h - h_delta))
         return cropped
     except Exception as e:
-        raise Exception("图片剪裁失败")
+        raise Exception(f"图片剪裁失败{e}")
 
 
 # 加logo
