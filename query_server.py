@@ -20,7 +20,8 @@ map_list = {
     "Battle of the Bulge": "突出部之役",
     "El Alamein": "阿拉曼",
     "Flashpoint": "焦点",
-    "Reclaimed": "重生"
+    "Reclaimed": "重生",
+    "Redacted": "删隐地区"
 }
 
 game_mode = {
