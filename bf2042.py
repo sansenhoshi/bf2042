@@ -60,6 +60,62 @@ ban_reason = {
     8: "刷枪"
 }
 
+
+nameList = {
+    'weapons' : 'weaponName',
+    'vehicles': 'vehicleName',
+    'gamemodes':'gamemodeName',
+    'maps':'mapName',
+    'gadgets':'gadgetName',
+    'classes':'characterName'
+}
+
+parse_content = {
+    'weapons' : ['weaponName','kills','killsPerMinute','headshots','accuracy'],
+    'vehicles' : ['vehicleName','kills','killsPerMinute','destroyed'],
+    'classes' : ['characterName','kills','kpm','revives','secondsPlayed'],
+    'gamemodes' : ['gamemodeName','kills','kpm','winPercent'],
+    'maps' : ['mapName','wins','winPercent','secondsPlayed'],
+    'gadgets':['gadgetName','kills','uses','vehiclesDestroyedWith']
+}
+
+parse_size = {
+    'weapons' : [(52,26),(5,2)],
+    'vehicles' : [(50,13),(5,8)],
+    'classes' : [(23,26),(17,2)],
+    'gamemodes' : [(26,26),(17,2)],
+    'maps' : [(52,21),(5,4)],
+    'gadgets':[(26,26),(17,2)]
+}
+
+parse_str = {
+    'weaponName':'武器:',
+    'kills':'击杀:',
+    'killsPerMinute':'KPM:',
+    'headshots':'爆头率:',
+    'accuracy':'精准度:',
+    'vehicleName':'载具:',
+    'characterName':'专家:',
+    'gamemodeName':'模式:',
+    'mapName':'地图:',
+    'gadgetName':'装置:',
+    'destroyed':'摧毁:',
+    'kpm':'KPM:',
+    'killDeath':'KD:',
+    'winPercent':'胜率:',
+    'wins':'胜场:',
+    'secondsPlayed':'游玩时长(h):',
+    'uses':'使用次数:',
+    'vehiclesDestroyedWith':'摧毁载具:',
+    'revives':'急救数:',    
+    'weapons' : '武器',
+    'vehicles': '载具',
+    'gamemodes':'模式',
+    'maps':'地图',
+    'gadgets':'装置',
+    'classes':'专家'
+}
+
 '''2042图片战绩生成'''
 filepath = os.path.dirname(__file__).replace("\\", "/")
 bf_ban_url = "https://api.gametools.network/bfban/checkban"
@@ -479,7 +535,7 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
     for index in range(0, 10):
         height = 320 + 20 * index
         draw.text((5, height), str(index + 1) + ' : ', fill='white', font=ch_text_font)
-        draw.text((50, height), vehicles.loc[index]['vehicleName'], fill='white', font=ch_text_font)
+        draw.text((50, height), str(vehicles.loc[index]['vehicleName']), fill='white', font=ch_text_font)
         draw.text((250, height), '击杀数：' + str(vehicles.loc[index]['kills']), fill='white', font=ch_text_font)
         draw.text((400, height), 'KPM：' + str(vehicles.loc[index]['killsPerMinute']), fill='white', font=ch_text_font)
         draw.text((520, height), '摧毁数：' + str(vehicles.loc[index]['destroyed']), fill='white', font=ch_text_font)
@@ -675,6 +731,173 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     # 添加logo
     new_img = paste_ic_logo(new_img)
     sv.logger.info(f"玩家：{player_name}->武器图片处理完成")
+    # 显示图片
+    # new_img.show()
+    b_io = BytesIO()
+    new_img.save(b_io, format="PNG")
+    base64_str = 'base64://' + base64.b64encode(b_io.getvalue()).decode()
+    return base64_str
+
+async def bf_2042_gen_property(data, platform, bot, sv,property):
+    # 基本信息
+    #玩家名称
+    player_name = data["userName"]
+    # 最佳专家
+    bestClass = data['bestClass']
+    # mvp
+    mvp = data['mvp']
+    # 击杀
+    kills = data['kills']
+    # 急救
+    revives = data["revives"]
+    # KD
+    killDeath = data['killDeath']
+    # 步战KD
+    infantryKillDeath = data['infantryKillDeath']
+    # KPM
+    killPerMin = data['killsPerMinute']
+    # 爆头率
+    headshots = data['headShots']
+    # 精准度
+    accuracy = data['accuracy']
+    # 游玩时间
+    playtime = data['secondsPlayed']
+    playtime = str(round(playtime/3600))
+    # 游戏场数
+    matchesPlay = data['matchesPlayed']
+    # AI击杀数
+    kill_AI = data['dividedKills']['ai']
+    # 处理击杀玩家的百分比
+    kill_human_per = data["humanPrecentage"]
+    kill_human_per = float(kill_human_per.strip('%')) / 100
+    # 四舍五入计算真实KD
+    real_kd = round(kill_human_per * killDeath, 2)
+    # 真实kpm
+    real_kpm = round(kill_human_per * killPerMin, 2)
+
+    # 添加BF ban 检测结果
+    bf_ban_res = await get_bf_ban_check(data["userName"], data["userId"], data["id"])
+
+    # 数据5 简易检测器
+    weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
+    hacker_check_res = hacker_check(weapon_list)
+    final = "未知"
+    color = "white"
+    check_res = False
+
+    if 3 in hacker_check_res:
+        final = "傻逼玩意"
+        color = "#FF9999"
+        check_res = True
+    elif 2 in hacker_check_res:
+        final = "挂？样本太少"
+        color = "yellow"
+        check_res = True
+    elif 1 in hacker_check_res:
+        final = "？样本太少"
+        color = "yellow"
+        check_res = True
+    elif 0 in hacker_check_res:
+        final = "疑？详查"
+        color = "yellow"
+        check_res = True
+    if not check_res:
+        # kpm大于1 总kd大于2 真实kd大于1.5
+        if killPerMin > 1.00 and killDeath > 2 and real_kd > 1.5:
+            final = "Pro"
+            color = "gold"
+        else:
+            final = "薯薯"
+            color = "skyblue"
+
+    # 计算图像所需大小
+    gen_data = data[property]
+    item_number = len(gen_data) if len(gen_data) < 16 else 16
+    item_number += 1
+    #属性行高
+    lineHeight = 40
+    img_width = 600
+    img_height = 200 + (item_number) * lineHeight + 10
+    new_img = Image.new('RGBA', (img_width,img_height),(0,0,0))
+    backImg = Image.open(filepath + '/img/bg/common/bf2042s6.jpg')
+    new_img.paste(backImg, (0,0))
+
+    ch_text_font = ImageFont.truetype(filepath + '/font/msyh.ttc', 20)    
+    ch_text_font2 = ImageFont.truetype(filepath + '/font/msyh.ttc', int((lineHeight - 10) / 2))
+
+    # 绘制基本信息背景
+    new_img = draw_rect(new_img, (10,10,590,190), 2, fill=(50,50,50,150))
+    # 绘制属性背景
+    new_img = draw_rect(new_img, (10,200,590,200 + item_number * lineHeight),2, fill=(50,50,50,150))
+    # 字体填充
+    draw = ImageDraw.Draw(new_img)
+    # 提取属性，并排序
+    proData = data[property]
+    proData = pd.DataFrame(proData)
+    proData.sort_values(by=parse_content[property][1], axis=0, inplace=True, ascending=False)
+    proData = proData.reset_index(drop=True)
+    # 绘制属性图片
+    draw.text((82 + 170, 197), parse_str[property], fill='red',font=ch_text_font)
+    for index in range(item_number - 1):
+        pName = proData.loc[index][parse_content[property][0]]
+        pName = pName.replace('/','-')
+        print(pName)
+        filename = filepath + '/img/' + property + '/' + pName +'.png'
+        if(os.path.exists(filename)):
+            pImg = Image.open(filename).resize(parse_size[property][0])
+            new_img.paste(pImg,(10 + parse_size[property][1][0], 230 + index * lineHeight + parse_size[property][1][1]))
+        draw.text((12,230+index*lineHeight - 15), '-' * 96, fill='#2d85a2', font=ch_text_font2)
+        for item_index in range(len(parse_content[property])):
+            left = 82
+            top = 230
+            top += index * lineHeight + 15 * int(item_index / 3)
+            left += item_index % 3 * 166                
+            thisPData = proData.loc[index][parse_content[property][item_index]]
+            if(parse_content[property][item_index] == 'secondsPlayed'):
+                thisPData = str(round(thisPData/3600))
+            draw.text((left, top), parse_str[parse_content[property][item_index]] + str(str(thisPData)) , fill='white', font=ch_text_font2)   
+
+    # 最佳专家图像
+    bestClassImg = Image.open(filepath + '/img/classes/' + bestClass+'.png').resize((94,112))
+    new_img.paste(bestClassImg, (13,13))
+    #生成个人数据
+    #玩家名称
+    draw.text((113,10), '玩家:'+ str(player_name),fill='white', font=ch_text_font)
+    #游玩时间
+    draw.text((354,10), '游玩时间:'+ str(playtime) + 'h',fill='white', font=ch_text_font)
+    #kd
+    draw.text((113,40), 'KD:'+ str(killDeath),fill='white', font=ch_text_font)
+    #kpm
+    draw.text((221,40), 'KPM:'+ str(killPerMin),fill='white', font=ch_text_font)
+    #real kd    
+    draw.text((354,40), '·KD:'+ str(real_kd),fill='red', font=ch_text_font)
+    #real kpm
+    draw.text((462,40), '·KPM:'+ str(real_kpm),fill='red', font=ch_text_font)
+    #kills
+    draw.text((113,70), '击杀数:'+ str(kills),fill='white', font=ch_text_font)
+    #revieve
+    draw.text((354,70), '急救数:'+ str(revives),fill='white', font=ch_text_font)
+    #headshot
+    draw.text((113,100), '爆头率:'+ str(headshots),fill='white', font=ch_text_font)
+    #accuracy
+    draw.text((354,100), '精准度:'+ str(accuracy),fill='white', font=ch_text_font)
+    #ai kill
+    draw.text((15,130), 'AI击杀:'+ str(kill_AI),fill='white', font=ch_text_font)
+    #infantry kd
+    draw.text((160,130), '步战KD:'+ str(infantryKillDeath),fill='white', font=ch_text_font)
+    #match
+    draw.text((305,130), '总场数:'+ str(matchesPlay),fill='white', font=ch_text_font)
+    #mvp
+    draw.text((450,130), 'MVP:'+ str(mvp),fill='white', font=ch_text_font)
+    #hacker?
+    draw.text((15,160), '猜测:'+ str(final),fill=color, font=ch_text_font)
+    #bfban
+    draw.text((305,160), 'BFBAN:'+ str(bf_ban_res),fill='blue', font=ch_text_font)
+
+    # 生成图像
+    new_img.save('./' + property + '.png', format='PNG')
+    # 图片处理完成 发送
+    sv.logger.info(f"玩家：{player_name}->图片处理完成")
     # 显示图片
     # new_img.show()
     b_io = BytesIO()
