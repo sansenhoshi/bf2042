@@ -298,25 +298,23 @@ async def query_player2(bot, ev):
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            # 解析玩家数据
-            img_mes = await bf_2042_gen_property(data, platform, bot, sv, 'weapons')
+        if data[0]:
+            img_mes = await bf_2042_gen_property(data[1], platform, bot, sv, 'weapons')
+            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = f"[CQ:reply,id={mes_id}]{reason}"
+            await bot.send(ev, msg)
     except ValueError as val_ee:
-        await bot.send(ev, '接口异常，建议稍后再查')
+        msg = '接口异常，建议稍后再查'
+        await bot.send(ev, msg)
         sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
-        await bot.send(ev, '网络异常，请联系机器人维护组')
+        msg = '网络异常，请联系机器人维护组'
+        await bot.send(ev, msg)
         sv.logger.error("异常：" + str(con_ee))
 
 
@@ -345,25 +343,23 @@ async def query_player2(bot, ev):
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            # 解析玩家数据
-            img_mes = await bf_2042_gen_property(data, platform, bot, sv, 'vehicles')
+        if data[0]:
+            img_mes = await bf_2042_gen_property(data[1], platform, bot, sv, 'vehicles')
+            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = f"[CQ:reply,id={mes_id}]{reason}"
+            await bot.send(ev, msg)
     except ValueError as val_ee:
-        await bot.send(ev, '接口异常，建议稍后再查')
+        msg = '接口异常，建议稍后再查'
+        await bot.send(ev, msg)
         sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
-        await bot.send(ev, '网络异常，请联系机器人维护组')
+        msg = '网络异常，请联系机器人维护组'
+        await bot.send(ev, msg)
         sv.logger.error("异常：" + str(con_ee))
 
 
@@ -392,25 +388,23 @@ async def query_player2(bot, ev):
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            # 解析玩家数据
-            img_mes = await bf_2042_gen_property(data, platform, bot, sv, 'classes')
+        if data[0]:
+            img_mes = await bf_2042_gen_property(data[1], platform, bot, sv, 'classes')
+            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = f"[CQ:reply,id={mes_id}]{reason}"
+            await bot.send(ev, msg)
     except ValueError as val_ee:
-        await bot.send(ev, '接口异常，建议稍后再查')
+        msg = '接口异常，建议稍后再查'
+        await bot.send(ev, msg)
         sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
-        await bot.send(ev, '网络异常，请联系机器人维护组')
+        msg = '网络异常，请联系机器人维护组'
+        await bot.send(ev, msg)
         sv.logger.error("异常：" + str(con_ee))
 
 
@@ -439,25 +433,23 @@ async def query_player2(bot, ev):
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            # 解析玩家数据
-            img_mes = await bf_2042_gen_property(data, platform, bot, sv, 'gamemodes')
+        if data[0]:
+            img_mes = await bf_2042_gen_property(data[1], platform, bot, sv, 'gamemodes')
+            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = f"[CQ:reply,id={mes_id}]{reason}"
+            await bot.send(ev, msg)
     except ValueError as val_ee:
-        await bot.send(ev, '接口异常，建议稍后再查')
+        msg = '接口异常，建议稍后再查'
+        await bot.send(ev, msg)
         sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
-        await bot.send(ev, '网络异常，请联系机器人维护组')
+        msg = '网络异常，请联系机器人维护组'
+        await bot.send(ev, msg)
         sv.logger.error("异常：" + str(con_ee))
 
 
@@ -486,25 +478,23 @@ async def query_player2(bot, ev):
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            # 解析玩家数据
-            img_mes = await bf_2042_gen_property(data, platform, bot, sv, 'maps')
+        if data[0]:
+            img_mes = await bf_2042_gen_property(data[1], platform, bot, sv, 'maps')
+            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = f"[CQ:reply,id={mes_id}]{reason}"
+            await bot.send(ev, msg)
     except ValueError as val_ee:
-        await bot.send(ev, '接口异常，建议稍后再查')
+        msg = '接口异常，建议稍后再查'
+        await bot.send(ev, msg)
         sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
-        await bot.send(ev, '网络异常，请联系机器人维护组')
+        msg = '网络异常，请联系机器人维护组'
+        await bot.send(ev, msg)
         sv.logger.error("异常：" + str(con_ee))
 
 
@@ -533,25 +523,23 @@ async def query_player2(bot, ev):
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
-        if "errors" in data:
-            reason = data["errors"][0]
-            await bot.send(ev, f"{reason}")
-
-        # 判断是否存在错误
-        elif "userName" in data:
-            # 解析玩家数据
-            img_mes = await bf_2042_gen_property(data, platform, bot, sv, 'gadgets')
+        if data[0]:
+            img_mes = await bf_2042_gen_property(data[1], platform, bot, sv, 'gadgets')
+            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             # 发送图片
-            await bot.send(ev, f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]")
-
+            await bot.send(ev, msg)
+        # 判断是否存在错误
         else:
-            reason = data
-            await bot.send(ev, f"异常：{reason}")
+            reason = data[1]
+            msg = f"[CQ:reply,id={mes_id}]{reason}"
+            await bot.send(ev, msg)
     except ValueError as val_ee:
-        await bot.send(ev, '接口异常，建议稍后再查')
+        msg = '接口异常，建议稍后再查'
+        await bot.send(ev, msg)
         sv.logger.error(f"异常：{str(val_ee)}")
     except ConnectionError as con_ee:
-        await bot.send(ev, '网络异常，请联系机器人维护组')
+        msg = '网络异常，请联系机器人维护组'
+        await bot.send(ev, msg)
         sv.logger.error("异常：" + str(con_ee))
 
 # @sv.on_prefix('.2042载具')
