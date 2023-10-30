@@ -210,10 +210,12 @@ def image_paste(paste_image, under_image, pos):
 def get_favorite_image(uid):
     bg_path = filepath + f"/img/bg/user/{uid}/"
     if os.listdir(bg_path):
+        print("用户设置了背景图片")
         bg_name = os.listdir(bg_path)
         index = random.randint(0, len(bg_name) - 1)
         img = Image.open(bg_path + f"{bg_name[index]}").convert('RGBA').resize((1920, 1080))
     else:
+        print("用户未设置背景图片")
         common_bg_name = os.listdir(filepath + "/img/bg/common/")
         index = random.randint(0, len(common_bg_name) - 1)
         img = Image.open(filepath + f"/img/bg/common/{common_bg_name[index]}").convert('RGBA').resize((1920, 1080))
