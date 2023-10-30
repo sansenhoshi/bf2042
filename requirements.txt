@@ -4,4 +4,6 @@ aiohttp~=3.8.4
 requests~=2.28.2
 nonebot~=1.8.0
 qrcode~=7.4.2
-pandas
+pandas~=2.1.1
+sqlalchemy~=2.0.22
+pymysql~=1.1.0
