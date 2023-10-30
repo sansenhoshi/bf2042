@@ -6,11 +6,11 @@ from io import BytesIO
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
-from hoshino.modules.bf2042.data_tools import hacker_check, get_bf_ban_check
-from hoshino.modules.bf2042.picture_tools import draw_rect, circle_corner, png_resize, \
+from .data_tools import hacker_check, get_bf_ban_check
+from .picture_tools import draw_rect, circle_corner, png_resize, \
     get_top_object_img, \
     image_paste, get_favorite_image, get_user_avatar, paste_ic_logo, get_avatar, get_special_icon, draw_point_line
-from hoshino.modules.bf2042.user_manager import check_user_support, check_user_support2, check_user_bind
+from .user_manager_cloud import *
 
 classesList = {
     "Mackay": "   麦凯",
@@ -60,60 +60,59 @@ ban_reason = {
     8: "刷枪"
 }
 
-
 nameList = {
-    'weapons' : 'weaponName',
+    'weapons': 'weaponName',
     'vehicles': 'vehicleName',
-    'gamemodes':'gamemodeName',
-    'maps':'mapName',
-    'gadgets':'gadgetName',
-    'classes':'characterName'
+    'gamemodes': 'gamemodeName',
+    'maps': 'mapName',
+    'gadgets': 'gadgetName',
+    'classes': 'characterName'
 }
 
 parse_content = {
-    'weapons' : ['weaponName','kills','killsPerMinute','headshots','accuracy'],
-    'vehicles' : ['vehicleName','kills','killsPerMinute','destroyed'],
-    'classes' : ['characterName','kills','kpm','revives','secondsPlayed'],
-    'gamemodes' : ['gamemodeName','kills','kpm','winPercent'],
-    'maps' : ['mapName','wins','winPercent','secondsPlayed'],
-    'gadgets':['gadgetName','kills','uses','vehiclesDestroyedWith']
+    'weapons': ['weaponName', 'kills', 'killsPerMinute', 'headshots', 'accuracy'],
+    'vehicles': ['vehicleName', 'kills', 'killsPerMinute', 'destroyed'],
+    'classes': ['characterName', 'kills', 'kpm', 'revives', 'secondsPlayed'],
+    'gamemodes': ['gamemodeName', 'kills', 'kpm', 'winPercent'],
+    'maps': ['mapName', 'wins', 'winPercent', 'secondsPlayed'],
+    'gadgets': ['gadgetName', 'kills', 'uses', 'vehiclesDestroyedWith']
 }
 
 parse_size = {
-    'weapons' : [(52,26),(5,2)],
-    'vehicles' : [(50,13),(5,8)],
-    'classes' : [(23,26),(17,2)],
-    'gamemodes' : [(26,26),(17,2)],
-    'maps' : [(52,21),(5,4)],
-    'gadgets':[(26,26),(17,2)]
+    'weapons': [(52, 26), (5, 2)],
+    'vehicles': [(50, 13), (5, 8)],
+    'classes': [(23, 26), (17, 2)],
+    'gamemodes': [(26, 26), (17, 2)],
+    'maps': [(52, 21), (5, 4)],
+    'gadgets': [(26, 26), (17, 2)]
 }
 
 parse_str = {
-    'weaponName':'武器:',
-    'kills':'击杀:',
-    'killsPerMinute':'KPM:',
-    'headshots':'爆头率:',
-    'accuracy':'精准度:',
-    'vehicleName':'载具:',
-    'characterName':'专家:',
-    'gamemodeName':'模式:',
-    'mapName':'地图:',
-    'gadgetName':'装置:',
-    'destroyed':'摧毁:',
-    'kpm':'KPM:',
-    'killDeath':'KD:',
-    'winPercent':'胜率:',
-    'wins':'胜场:',
-    'secondsPlayed':'游玩时长(h):',
-    'uses':'使用次数:',
-    'vehiclesDestroyedWith':'摧毁载具:',
-    'revives':'急救数:',    
-    'weapons' : '武器',
+    'weaponName': '武器:',
+    'kills': '击杀:',
+    'killsPerMinute': 'KPM:',
+    'headshots': '爆头率:',
+    'accuracy': '精准度:',
+    'vehicleName': '载具:',
+    'characterName': '专家:',
+    'gamemodeName': '模式:',
+    'mapName': '地图:',
+    'gadgetName': '装置:',
+    'destroyed': '摧毁:',
+    'kpm': 'KPM:',
+    'killDeath': 'KD:',
+    'winPercent': '胜率:',
+    'wins': '胜场:',
+    'secondsPlayed': '游玩时长(h):',
+    'uses': '使用次数:',
+    'vehiclesDestroyedWith': '摧毁载具:',
+    'revives': '急救数:',
+    'weapons': '武器',
     'vehicles': '载具',
-    'gamemodes':'模式',
-    'maps':'地图',
-    'gadgets':'装置',
-    'classes':'专家'
+    'gamemodes': '模式',
+    'maps': '地图',
+    'gadgets': '装置',
+    'classes': '专家'
 }
 
 '''2042图片战绩生成'''
@@ -121,7 +120,7 @@ filepath = os.path.dirname(__file__).replace("\\", "/")
 bf_ban_url = "https://api.gametools.network/bfban/checkban"
 
 
-async def bf_2042_gen_pic(data, platform, bot, ev, sv):
+async def bf_2042_gen_pic(data, platform, ev, sv):
     # 1.创建黑色板块 1920*1080
     new_img = Image.new('RGBA', (1920, 1080), (0, 0, 0, 1000))
     # 2.获取头像图片 150*150
@@ -129,8 +128,8 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     nucleus_id = data['userId']
     persona_id = data['id']
     # 调用接口获取正确的头像(由于某些人的自爆头像，现在获取ea头像仅对绑定用户生效，其他的一律不显示ea头像)
-    res = await check_user_bind(ev.user_id)
-    if res[1] and res[0].upper() == data["userName"].upper():
+    res = await check_bind(ev.user_id)
+    if res[0] and res[1].upper() == data["userName"].upper():
         avatar = await get_avatar(platform_id, persona_id, nucleus_id, sv)
     else:
         avatar = Image.open(filepath + "/img/class_icon/No-Pats.png")
@@ -138,16 +137,19 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
     avatar = circle_corner(avatar, 10)
     # 3.获取背景 并 模糊
     # 判断是否为support
-    if await check_user_support(ev.user_id):
+    support_res = await check_user_support(ev.user_id)
+    if support_res[0]:
+        sv.logger.info("用户特权：自定义背景图片")
         img = get_favorite_image(ev.user_id)
     else:
+        sv.logger.info("普通用户：常规背景图片")
         bg_name = os.listdir(filepath + "/img/bg/common/")
         index = random.randint(0, len(bg_name) - 1)
         img = Image.open(filepath + f"/img/bg/common/{bg_name[index]}").convert('RGBA').resize((1920, 1080))
     # img_filter = img.filter(ImageFilter.GaussianBlur(radius=3))
     # 4.拼合板块+背景+logo
     new_img.paste(img, (0, 0))
-    if await check_user_support2(ev.user_id, data["userName"]):
+    if support_res[0] and support_res[1].upper() == data["userName"].upper():
         logo = get_user_avatar(ev.user_id)
     else:
         logo = Image.open(filepath + "/img/bf2042_logo/bf2042logo.png").convert('RGBA')
@@ -410,7 +412,8 @@ async def bf_2042_gen_pic(data, platform, bot, ev, sv):
         else:
             draw.line([975, line_height, 975, line_height + 80], fill="#66CCFF", width=5, joint=None)
             line_height += 110
-        new_img = image_paste(get_top_object_img(top_vehicles_list[n], sv).resize((320, 80)), new_img, (980, height + 5))
+        new_img = image_paste(get_top_object_img(top_vehicles_list[n], sv).resize((320, 80)), new_img,
+                              (980, height + 5))
         draw.text((1325, height), f'{top_vehicles_list[n]["vehicleName"]}', fill="white", font=en_text_font4)
         draw.text((1325, height + 45), f'击杀：{top_vehicles_list[n]["kills"]}', fill="white", font=ch_text_font4)
         draw.text((1630, height), f'KPM：{top_vehicles_list[n]["killsPerMinute"]}', fill="white", font=ch_text_font4)
@@ -562,7 +565,7 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
     return base64_str
 
 
-async def bf2042_weapon(data, platform, bot, ev, sv):
+async def bf2042_weapon(data, platform, ev, sv):
     # 1.创建黑色板块 1920*1080
     new_img = Image.new('RGBA', (1920, 1080), (0, 0, 0, 1000))
     # 2.获取头像图片 150*150
@@ -570,8 +573,8 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     nucleus_id = data['userId']
     persona_id = data['id']
     # 调用接口获取正确的头像(由于某些人的自爆头像，现在获取ea头像仅对绑定用户生效，其他的一律不显示ea头像)
-    res = await check_user_bind(ev.user_id)
-    if res[1] and res[0].upper() == data["userName"].upper():
+    res = await check_bind(ev.user_id)
+    if res[0] and res[1].upper() == data["userName"].upper():
         avatar = await get_avatar(platform_id, persona_id, nucleus_id, sv)
     else:
         avatar = Image.open(filepath + "/img/class_icon/No-Pats.png")
@@ -713,7 +716,7 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     draw.line([950, 225, 950, 1030], fill="white", width=5, joint=None)
     # 遍历 右
     height = 220
-    for i in range(index+1, index + 9):
+    for i in range(index + 1, index + 9):
         new_img = image_paste(get_top_object_img(top_weapon_list[i], sv).resize((160, 80)), new_img, (975, height + 5))
         draw.text((1160, height), f'{top_weapon_list[i]["weaponName"]}', fill="white", font=en_text_font4)
         draw.text((1160, height + 45), f'击杀：{top_weapon_list[i]["kills"]}', fill="white", font=ch_text_font4)
@@ -738,9 +741,10 @@ async def bf2042_weapon(data, platform, bot, ev, sv):
     base64_str = 'base64://' + base64.b64encode(b_io.getvalue()).decode()
     return base64_str
 
-async def bf_2042_gen_property(data, platform, bot, sv,property):
+
+async def bf_2042_gen_property(data, platform, bot, sv, property):
     # 基本信息
-    #玩家名称
+    # 玩家名称
     player_name = data["userName"]
     # 最佳专家
     bestClass = data['bestClass']
@@ -762,7 +766,7 @@ async def bf_2042_gen_property(data, platform, bot, sv,property):
     accuracy = data['accuracy']
     # 游玩时间
     playtime = data['secondsPlayed']
-    playtime = str(round(playtime/3600))
+    playtime = str(round(playtime / 3600))
     # 游戏场数
     matchesPlay = data['matchesPlayed']
     # AI击杀数
@@ -814,21 +818,21 @@ async def bf_2042_gen_property(data, platform, bot, sv,property):
     gen_data = data[property]
     item_number = len(gen_data) if len(gen_data) < 16 else 16
     item_number += 1
-    #属性行高
+    # 属性行高
     lineHeight = 40
     img_width = 600
     img_height = 200 + (item_number) * lineHeight + 10
-    new_img = Image.new('RGBA', (img_width,img_height),(0,0,0))
+    new_img = Image.new('RGBA', (img_width, img_height), (0, 0, 0))
     backImg = Image.open(filepath + '/img/bg/common/bf2042s6.jpg')
-    new_img.paste(backImg, (0,0))
+    new_img.paste(backImg, (0, 0))
 
-    ch_text_font = ImageFont.truetype(filepath + '/font/msyh.ttc', 20)    
+    ch_text_font = ImageFont.truetype(filepath + '/font/msyh.ttc', 20)
     ch_text_font2 = ImageFont.truetype(filepath + '/font/msyh.ttc', int((lineHeight - 10) / 2))
 
     # 绘制基本信息背景
-    new_img = draw_rect(new_img, (10,10,590,190), 2, fill=(50,50,50,150))
+    new_img = draw_rect(new_img, (10, 10, 590, 190), 2, fill=(50, 50, 50, 150))
     # 绘制属性背景
-    new_img = draw_rect(new_img, (10,200,590,200 + item_number * lineHeight),2, fill=(50,50,50,150))
+    new_img = draw_rect(new_img, (10, 200, 590, 200 + item_number * lineHeight), 2, fill=(50, 50, 50, 150))
     # 字体填充
     draw = ImageDraw.Draw(new_img)
     # 提取属性，并排序
@@ -837,62 +841,64 @@ async def bf_2042_gen_property(data, platform, bot, sv,property):
     proData.sort_values(by=parse_content[property][1], axis=0, inplace=True, ascending=False)
     proData = proData.reset_index(drop=True)
     # 绘制属性图片
-    draw.text((82 + 170, 197), parse_str[property], fill='red',font=ch_text_font)
+    draw.text((82 + 170, 197), parse_str[property], fill='red', font=ch_text_font)
     for index in range(item_number - 1):
         pName = proData.loc[index][parse_content[property][0]]
-        pName = pName.replace('/','-')
+        pName = pName.replace('/', '-')
         print(pName)
-        filename = filepath + '/img/' + property + '/' + pName +'.png'
-        if(os.path.exists(filename)):
+        filename = filepath + '/img/' + property + '/' + pName + '.png'
+        if (os.path.exists(filename)):
             pImg = Image.open(filename).resize(parse_size[property][0])
-            new_img.paste(pImg,(10 + parse_size[property][1][0], 230 + index * lineHeight + parse_size[property][1][1]))
-        draw.text((12,230+index*lineHeight - 15), '-' * 96, fill='#2d85a2', font=ch_text_font2)
+            new_img.paste(pImg,
+                          (10 + parse_size[property][1][0], 230 + index * lineHeight + parse_size[property][1][1]))
+        draw.text((12, 230 + index * lineHeight - 15), '-' * 96, fill='#2d85a2', font=ch_text_font2)
         for item_index in range(len(parse_content[property])):
             left = 82
             top = 230
             top += index * lineHeight + 15 * int(item_index / 3)
-            left += item_index % 3 * 166                
+            left += item_index % 3 * 166
             thisPData = proData.loc[index][parse_content[property][item_index]]
-            if(parse_content[property][item_index] == 'secondsPlayed'):
-                thisPData = str(round(thisPData/3600))
-            draw.text((left, top), parse_str[parse_content[property][item_index]] + str(str(thisPData)) , fill='white', font=ch_text_font2)   
+            if (parse_content[property][item_index] == 'secondsPlayed'):
+                thisPData = str(round(thisPData / 3600))
+            draw.text((left, top), parse_str[parse_content[property][item_index]] + str(str(thisPData)), fill='white',
+                      font=ch_text_font2)
 
-    # 最佳专家图像
-    bestClassImg = Image.open(filepath + '/img/classes/' + bestClass+'.png').resize((94,112))
-    new_img.paste(bestClassImg, (13,13))
-    #生成个人数据
-    #玩家名称
-    draw.text((113,10), '玩家:'+ str(player_name),fill='white', font=ch_text_font)
-    #游玩时间
-    draw.text((354,10), '游玩时间:'+ str(playtime) + 'h',fill='white', font=ch_text_font)
-    #kd
-    draw.text((113,40), 'KD:'+ str(killDeath),fill='white', font=ch_text_font)
-    #kpm
-    draw.text((221,40), 'KPM:'+ str(killPerMin),fill='white', font=ch_text_font)
-    #real kd    
-    draw.text((354,40), '·KD:'+ str(real_kd),fill='red', font=ch_text_font)
-    #real kpm
-    draw.text((462,40), '·KPM:'+ str(real_kpm),fill='red', font=ch_text_font)
-    #kills
-    draw.text((113,70), '击杀数:'+ str(kills),fill='white', font=ch_text_font)
-    #revieve
-    draw.text((354,70), '急救数:'+ str(revives),fill='white', font=ch_text_font)
-    #headshot
-    draw.text((113,100), '爆头率:'+ str(headshots),fill='white', font=ch_text_font)
-    #accuracy
-    draw.text((354,100), '精准度:'+ str(accuracy),fill='white', font=ch_text_font)
-    #ai kill
-    draw.text((15,130), 'AI击杀:'+ str(kill_AI),fill='white', font=ch_text_font)
-    #infantry kd
-    draw.text((160,130), '步战KD:'+ str(infantryKillDeath),fill='white', font=ch_text_font)
-    #match
-    draw.text((305,130), '总场数:'+ str(matchesPlay),fill='white', font=ch_text_font)
-    #mvp
-    draw.text((450,130), 'MVP:'+ str(mvp),fill='white', font=ch_text_font)
-    #hacker?
-    draw.text((15,160), '猜测:'+ str(final),fill=color, font=ch_text_font)
-    #bfban
-    draw.text((305,160), 'BFBAN:'+ str(bf_ban_res),fill='blue', font=ch_text_font)
+            # 最佳专家图像
+    bestClassImg = Image.open(filepath + '/img/classes/' + bestClass + '.png').resize((94, 112))
+    new_img.paste(bestClassImg, (13, 13))
+    # 生成个人数据
+    # 玩家名称
+    draw.text((113, 10), '玩家:' + str(player_name), fill='white', font=ch_text_font)
+    # 游玩时间
+    draw.text((354, 10), '游玩时间:' + str(playtime) + 'h', fill='white', font=ch_text_font)
+    # kd
+    draw.text((113, 40), 'KD:' + str(killDeath), fill='white', font=ch_text_font)
+    # kpm
+    draw.text((221, 40), 'KPM:' + str(killPerMin), fill='white', font=ch_text_font)
+    # real kd
+    draw.text((354, 40), '·KD:' + str(real_kd), fill='red', font=ch_text_font)
+    # real kpm
+    draw.text((462, 40), '·KPM:' + str(real_kpm), fill='red', font=ch_text_font)
+    # kills
+    draw.text((113, 70), '击杀数:' + str(kills), fill='white', font=ch_text_font)
+    # revieve
+    draw.text((354, 70), '急救数:' + str(revives), fill='white', font=ch_text_font)
+    # headshot
+    draw.text((113, 100), '爆头率:' + str(headshots), fill='white', font=ch_text_font)
+    # accuracy
+    draw.text((354, 100), '精准度:' + str(accuracy), fill='white', font=ch_text_font)
+    # ai kill
+    draw.text((15, 130), 'AI击杀:' + str(kill_AI), fill='white', font=ch_text_font)
+    # infantry kd
+    draw.text((160, 130), '步战KD:' + str(infantryKillDeath), fill='white', font=ch_text_font)
+    # match
+    draw.text((305, 130), '总场数:' + str(matchesPlay), fill='white', font=ch_text_font)
+    # mvp
+    draw.text((450, 130), 'MVP:' + str(mvp), fill='white', font=ch_text_font)
+    # hacker?
+    draw.text((15, 160), '猜测:' + str(final), fill=color, font=ch_text_font)
+    # bf ban
+    draw.text((305, 160), 'BFBAN:' + str(bf_ban_res), fill='blue', font=ch_text_font)
 
     # 生成图像
     new_img.save('./' + property + '.png', format='PNG')
