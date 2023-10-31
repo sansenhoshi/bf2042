@@ -581,16 +581,19 @@ async def bf2042_weapon(data, platform, ev, sv):
     avatar = png_resize(avatar, new_width=145, new_height=145)
     avatar = circle_corner(avatar, 10)
     # 3.获取背景 并 模糊
-    # 判断是否为support
-    if await check_user_support(ev.user_id):
+    support_res = await check_user_support(ev.user_id)
+    if support_res[0]:
+        sv.logger.info("用户特权：自定义背景图片")
         img = get_favorite_image(ev.user_id)
     else:
+        sv.logger.info("普通用户：常规背景图片")
         bg_name = os.listdir(filepath + "/img/bg/common/")
         index = random.randint(0, len(bg_name) - 1)
         img = Image.open(filepath + f"/img/bg/common/{bg_name[index]}").convert('RGBA').resize((1920, 1080))
+    # img_filter = img.filter(ImageFilter.GaussianBlur(radius=3))
     # 4.拼合板块+背景+logo
     new_img.paste(img, (0, 0))
-    if await check_user_support2(ev.user_id, data["userName"]):
+    if support_res[0] and support_res[1].upper() == data["userName"].upper():
         logo = get_user_avatar(ev.user_id)
     else:
         logo = Image.open(filepath + "/img/bf2042_logo/bf2042logo.png").convert('RGBA')
