@@ -107,9 +107,9 @@ async def query_data(player, platform):
     }
     res = (False, "数据请求失败喵")
     retry_options = ExponentialRetry(attempts=2, exceptions=(aiohttp.ClientError,))
-    async with RetryClient(retry_options=retry_options) as session:
+    async with RetryClient(retry_options=retry_options) as r_session:
         try:
-            async with session.get(url, headers=headers, timeout=15) as response:
+            async with r_session.get(url, headers=headers, timeout=15) as response:
                 rest = await response.text()
                 rest = str_filter(rest)
                 if response.status == 200:
@@ -691,7 +691,7 @@ async def bind_player(bot, ev):
             sv.logger.info(f"绑定用户：{result[1]['userName']}")
             res = await bind_user(name=name, platform=platform, uid=uid, nucleusId=nucleusId, personaId=personaId)
             img_mes = await bf_2042_simple_pic(result[1], platform, bot, sv)
-            msg = f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]"
+            msg = f"[CQ:reply,id={mes_id}]{res[1]}[CQ:image,file={img_mes}]"
             await bot.send(ev, msg)
         else:
             msg = f"[CQ:reply,id={mes_id}]失败：{result[1]}，使用[.绑定 游戏id]绑定"
@@ -727,7 +727,7 @@ async def bind_player(bot, ev):
             sv.logger.info(f"绑定用户：{result[1]['userName']}")
             res = await bind_user(name=name, platform=platform, uid=uid, nucleusId=nucleusId, personaId=personaId)
             img_mes = await bf_2042_simple_pic(result[1], platform, bot, sv)
-            msg = f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]"
+            msg = f"[CQ:reply,id={mes_id}]{res[1]}[CQ:image,file={img_mes}]"
             await bot.send(ev, msg)
         else:
             msg = f"[CQ:reply,id={mes_id}]失败：{result[1]}，使用[.绑定 游戏id]绑定"
@@ -763,7 +763,7 @@ async def bind_player(bot, ev):
             sv.logger.info(f"绑定用户：{result[1]['userName']}")
             res = await bind_user(name=name, platform=platform, uid=uid, nucleusId=nucleusId, personaId=personaId)
             img_mes = await bf_2042_simple_pic(result[1], platform, bot, sv)
-            msg = f"[CQ:reply,id={mes_id}]{res}[CQ:image,file={img_mes}]"
+            msg = f"[CQ:reply,id={mes_id}]{res[1]}[CQ:image,file={img_mes}]"
             await bot.send(ev, msg)
         else:
             msg = f"[CQ:reply,id={mes_id}]失败：{result[1]}，使用[.绑定 游戏id]绑定"
@@ -878,12 +878,13 @@ async def upload_img(u_session: CommandSession):
     # 获取消息id
     msg_id = u_session.event['message_id']
     # 检测是否绑定
-    is_bind, _ = await check_bind(uid)
-    if not is_bind:
+    is_bind = await check_bind(uid)
+    if not is_bind[0]:
         await u_session.send("未绑定")
         return
-    # 检测是否有权限
-    if not await check_user_support(uid):
+    #
+    is_support = await check_user_support(uid)
+    if not is_support[0]:
         await u_session.send(f"[CQ:reply,id={msg_id}]无权限")
         return
 
