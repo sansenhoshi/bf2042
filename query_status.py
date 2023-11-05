@@ -70,7 +70,7 @@ async def query_player1(bot, ev):
         # 检查玩家是否存在
         if data[0]:
             img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
-            msg = (MessageSegment.reply(mes_id), MessageSegment.image(img_mes))
+            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             # 发送图片
             await bot.send(ev, msg)
         # 判断是否存在错误
