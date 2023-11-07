@@ -217,7 +217,7 @@ async def query_player_weapon(bot, ev):
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
 
-    await bot.send(ev, '查询中，请耐心等待...')
+    await bot.send(ev, f'正在查询 {player} {str(cmd).replace(".","")} 数据，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
