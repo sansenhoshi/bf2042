@@ -5,7 +5,7 @@ import re
 import aiohttp
 from aiohttp_retry import RetryClient, ExponentialRetry
 from hoshino import Service, aiorequests
-from .bf2042 import bf_2042_gen_pic, bf_2042_simple_pic, bf_2042_gen_property, bf2042_weapon
+from .bf2042 import bf_2042_gen_pic, bf_2042_simple_pic, bf_2042_gen_property, bf2042_total
 from .data_tools import *
 from .picture_tools import *
 from .query_server import get_server_list
@@ -35,7 +35,8 @@ sv = Service('2042战绩查询', help_='''
 [.PS绑定+ID] 绑定游戏ID到QQ（仅仅支持PS）
 [.XBOX绑定+ID] 绑定游戏ID到QQ（仅仅支持XBOX）
 -----特权-----
-[.上传图片] 上传自定义背景
+[.上传图片] 上传自定义背景（需要请求bot管理员获得）
+[.清空背景] 清空所有背景图片
 -----入群检测-----
 检测新加群的EA ID
 '''.strip())
@@ -117,7 +118,7 @@ async def query_data(player, platform):
         try:
             async with r_session.get(url, headers=headers, timeout=15) as response:
                 rest = await response.text()
-                rest = str_filter(rest)
+                # rest = str_filter(rest)
                 if response.status == 200:
                     result = json.loads(rest)
                     # 判断是否查询到玩家数据
@@ -185,8 +186,16 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix('.武器')
+@sv.on_prefix(('.武器', '.载具', '.专家', '.配备'), only_to_me=False)
 async def query_player_weapon(bot, ev):
+    query_type = {
+        '.武器': 0,
+        '.载具': 1,
+        '.专家': 2,
+        '.配备': 3
+    }
+    cmd = ev['prefix']
+    match = query_type[cmd]
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     # 修改个人cd为群cd缓解接口压力
@@ -213,7 +222,7 @@ async def query_player_weapon(bot, ev):
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
-            img_mes = await bf2042_weapon(data[1], platform, ev, sv)
+            img_mes = await bf2042_total(data[1], platform, ev, sv, match)
             # 发送图片
             msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
             await bot.send(ev, msg)
@@ -279,7 +288,7 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix('.枪械')
+@sv.on_prefix('/枪械')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
@@ -324,7 +333,7 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix('.载具')
+@sv.on_prefix('/载具')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
@@ -369,7 +378,7 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix('.专家')
+@sv.on_prefix('/专家')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
@@ -414,7 +423,7 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix('.模式')
+@sv.on_prefix('/模式')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
@@ -459,7 +468,7 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix('.地图')
+@sv.on_prefix('/地图')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
@@ -504,7 +513,7 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix('.装置')
+@sv.on_prefix('/装置')
 async def query_player2(bot, ev):
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
