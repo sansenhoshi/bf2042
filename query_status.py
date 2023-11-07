@@ -7,7 +7,7 @@ from aiohttp_retry import RetryClient, ExponentialRetry
 from hoshino import Service, aiorequests
 from .bf2042 import bf_2042_gen_pic, bf_2042_simple_pic, bf_2042_gen_property, bf2042_weapon
 from .data_tools import *
-from .picture_tools import user_img_save
+from .picture_tools import *
 from .query_server import get_server_list
 from .user_manager_cloud import *
 from hoshino.util import FreqLimiter
@@ -846,6 +846,27 @@ async def add_white_user(bot, ev):
             await bot.finish(ev, f'[CQ:reply,id={mes_id}] 添加失败')
     else:
         await bot.send(ev, f"[CQ:reply,id={mes_id}] 无权限")
+
+
+@sv.on_prefix('.清空背景')
+async def delete_bg(bot, ev):
+    msg_id = ev.message_id
+    uid = ev.user_id
+    # 检测是否绑定
+    res = await check_bind(uid)
+    if not res[0]:
+        await bot.send(ev, f"[CQ:reply,id={mes_id}]{uid}未绑定")
+        return
+    is_support = await check_user_support(uid)
+    if not is_support[0]:
+        await bot.send(ev, f"[CQ:reply,id={msg_id}]{uid}无权限")
+        return
+    # 保存图片
+    try:
+        await user_img_delete(uid)
+        await bot.send(ev, f"[CQ:reply,id={msg_id}] 清空成功")
+    except Exception as e:
+        await bot.send(ev, f"[CQ:reply,id={msg_id}] 图片清空失败{e}")
 
 
 @sv.on_prefix('.移除名单')
