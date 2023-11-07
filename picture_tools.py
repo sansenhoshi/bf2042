@@ -261,7 +261,8 @@ async def user_img_save(pic_data: bytes, uid: int):
     """
     bg_path = filepath + f"/img/bg/user/{uid}/"
     try:
-        os.makedirs(bg_path)
+        if not os.path.exists(bg_path):
+            os.makedirs(bg_path)
         # 裁剪图片
         pic_data = cut_image(pic_data, 16 / 9)
         # 保存图片
@@ -271,6 +272,26 @@ async def user_img_save(pic_data: bytes, uid: int):
         pic_data.save(bg_path + str(time_now) + ".jpeg", quality=95)
     except Exception as e:
         raise Exception(f"图片保存失败{e}")
+
+
+# 删除用户的图片
+async def user_img_delete(uid: int):
+    """
+    删除用户的图片
+    :param uid: 用户id
+    :return:
+    """
+    bg_path = filepath + f"/img/bg/user/{uid}/"
+    try:
+        files = os.listdir(bg_path)
+        for file in files:
+            file_path = os.path.join(bg_path, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+    except FileNotFoundError:
+        raise Exception("用户图片目录不存在")
+    except Exception as e:
+        raise Exception(f"图片删除失败: {e}")
 
 
 # 图片裁剪
