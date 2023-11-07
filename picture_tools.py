@@ -261,6 +261,7 @@ async def user_img_save(pic_data: bytes, uid: int):
     """
     bg_path = filepath + f"/img/bg/user/{uid}/"
     try:
+        os.makedirs(bg_path)
         # 裁剪图片
         pic_data = cut_image(pic_data, 16 / 9)
         # 保存图片
