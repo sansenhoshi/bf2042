@@ -916,7 +916,7 @@ async def upload_img(u_session: CommandSession):
         return
 
     # 获取用户上传的图片并检查格式
-    u_session.get('org_img', prompt="请发送一张16:9宽高比的图片：")
+    u_session.get('org_img', prompt="请发送一张图片(推荐使用16:9宽高比，效果最好)：")
     org_img = u_session.state['org_img']
     match = re.search("(?<=url=).*?(?=])", str(org_img))
     if not match:
