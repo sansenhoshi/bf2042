@@ -162,7 +162,7 @@ async def query_player2(bot, ev):
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
 
-    await bot.send(ev, '查询中，请耐心等待...')
+    await bot.send(ev, f'正在查询 {player} 的数据，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
@@ -186,13 +186,15 @@ async def query_player2(bot, ev):
         sv.logger.error("异常：" + str(con_ee))
 
 
-@sv.on_prefix(('.武器', '.载具', '.专家', '.配备'), only_to_me=False)
+@sv.on_prefix(('.武器', '.载具', '.专家', '.配备', '.地图', '.模式'), only_to_me=False)
 async def query_player_weapon(bot, ev):
     query_type = {
         '.武器': 0,
         '.载具': 1,
         '.专家': 2,
-        '.配备': 3
+        '.配备': 3,
+        '.地图': 4,
+        '.模式': 5
     }
     cmd = ev['prefix']
     match = query_type[cmd]
@@ -611,7 +613,7 @@ async def query_player3(bot, ev):
         else:
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
-    await bot.send(ev, '查询中，请耐心等待...')
+    await bot.send(ev, f'正在查询 {player} 的数据，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
@@ -656,7 +658,7 @@ async def query_player4(bot, ev):
         else:
             await bot.send(ev, "未检测到ID，请确认格式是否正确。如果你想快捷查询自己的战绩，请使用 [.绑定 游戏ID]")
             return
-    await bot.send(ev, '查询中，请耐心等待...')
+    await bot.send(ev, f'正在查询 {player} 的数据，请耐心等待...')
     try:
         data = await query_data(player, platform)
         # 检查玩家是否存在
@@ -954,8 +956,8 @@ sv2 = Service('入群数据检索', help_='''
 '''.strip())
 
 
-@sv2.on_request('bf_group.add')
-async def data_check(g_session: RequestSession):
+@on_request('bf_group.add')
+async def data_check(bot, g_session: RequestSession):
     ev = g_session.event
     self_id = g_session.event['self_id']
     sub_type = g_session.event['sub_type']
@@ -968,9 +970,11 @@ async def data_check(g_session: RequestSession):
           f"请求加群\n" \
           f"{comment}"
     mes2 = f"正在获取该用户的游戏数据~"
+    print(mes)
     await nb_bot.send_group_msg(group_id=group_id, message=mes, self_id=self_id)
     await nb_bot.send_group_msg(group_id=group_id, message=mes2, self_id=self_id)
-    if await check_approve(group_id):
+    check_res = await check_group_approve_status(group_id)
+    if check_res[0]:
         if sub_type == 'add':
             pattern = r"答案：(\w+)"
             match = re.search(pattern, comment)
@@ -996,12 +1000,12 @@ async def data_check(g_session: RequestSession):
 @on_command('bf_enable', aliases=('.启用审批', '.开启审批'), permission=perm.GROUP, only_to_me=False)
 async def enable_approve(a_session: CommandSession):
     group_id = a_session.event['group_id']
-    await set_approve(group_id, True)
+    await change_group_approve_status(group_id, 1)
     await a_session.send(f'已将群{group_id} 的加群审批设置为 {True}')
 
 
 @on_command('bf_disable', aliases=('.禁用审批', '.关闭审批'), permission=perm.GROUP, only_to_me=False)
 async def disable_approve(d_session: CommandSession):
     group_id = d_session.event['group_id']
-    await set_approve(group_id, False)
+    await change_group_approve_status(group_id, 0)
     await d_session.send(f'已将群{group_id} 的加群审批设置为 {False}')
