@@ -354,7 +354,7 @@ map_list = {
     "Orbital": "航天发射中心",
     "Manifest": "货物仓单",
     "Discarded": "废弃之地",
-    "Kaleidoscope": "万花筒",
+    "Kaleidescope": "万花筒",
     "Breakaway": "分崩离析",
     "Hourglass": "沙漏",
     "Spearhead": "急先锋",
@@ -372,16 +372,17 @@ map_list = {
 }
 
 game_mode = {
-    "Breakthrough": "突破模式",
-    "Breakthrough Small": "突破模式（小型）",
-    "Breakthrough Large": "突破模式（大型）",
-    "Conquest": "征服模式",
-    "Conquest Small": "征服模式（小型）",
-    "Conquest large": "征服模式（大型）",
+    "Breakthrough": "突破",
+    "Breakthrough Small": "突破（小型）",
+    "Breakthrough Large": "突破（大型）",
+    "Conquest": "征服",
+    "Conquest Small": "征服（小型）",
+    "Conquest Large": "征服（大型）",
     "Rush": "突袭模式",
     "Modbuilder Custom": "门户自定义",
     "Hazard Zone": "危险地带",
-    "Hazard Zone Small": "危险地带（小型）",
+    "Hazard Zone Large": "危险地带（大）",
+    "Hazard Zone Small": "危险地带（小）",
     "Custom": "自定义模式"
 }
 
@@ -960,6 +961,10 @@ async def bf2042_total(data, platform, ev, sv, match):
         new_img = await draw_classes(new_img, data, sv)
     elif match == 3:
         new_img = await draw_gadgets(new_img, data, sv)
+    elif match == 4:
+        new_img = await draw_maps(new_img, data, sv)
+    elif match == 5:
+        new_img = await draw_gamemodes(new_img, data, sv)
     player_name = data["userName"]
     # 添加logo
     new_img = paste_ic_logo(new_img)
@@ -1312,10 +1317,118 @@ async def draw_classes(new_img, data, sv):
     return new_img
 
 
-# async def draw_gamemodes(new_img,data):
-#
-#
-# async def draw_maps(new_img,data):
+async def draw_gamemodes(new_img, data, sv):
+    draw = ImageDraw.Draw(new_img)
+    # 10.绘制框
+    new_img = draw_rect(new_img, (25, 205, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))
+
+    # 击杀数排序
+    top_list = sorted(data["gamemodes"], key=lambda k: k['kills'], reverse=True)
+    # 载入字体
+    ch_text_font4 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
+    en_text_font4 = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 32)
+    ch_text_font4_5 = ImageFont.truetype(filepath + '/font/msyh.ttc', 32)
+    np_logo = Image.open(filepath + "/img/specialist_icon/No-Pats.png").convert('RGBA')
+    # 遍历 左
+    height = 265
+    index = 0
+    for i in range(0, 4):
+        new_img = image_paste(np_logo.resize((70, 70)), new_img, (100, height + 5))
+        gamemode_name = game_mode[top_list[i]["gamemodeName"]]
+        draw.text((230, height), f'{gamemode_name}', fill="white", font=ch_text_font4_5)
+        draw.text((230, height + 45), f'击杀：{top_list[i]["kills"]}', fill="white", font=ch_text_font4)
+
+        draw.text((450, height), f'KPM：{top_list[i]["kpm"]}', fill="white", font=ch_text_font4)
+        draw.text((450, height + 45), f'场次：{top_list[i]["matches"]}', fill="white", font=ch_text_font4)
+
+        draw.text((730, height), f'胜率：{top_list[i]["winPercent"]}', fill="white", font=ch_text_font4)
+        draw.text((730, height + 45), f'时长：{int(int(top_list[i]["secondsPlayed"]) / 3600 + 0.55)} H',
+                  fill="white",
+                  font=ch_text_font4)
+        if i != 3:
+            # 绘制虚线
+            new_img = await draw_point_line(new_img, start_point=(50, height + 145), end_point=(1870, height + 90),
+                                            line_color='lightgreen')
+        height += 200
+        index = i
+
+    # 分割线
+    draw.line([950, 225, 950, 1030], fill="white", width=5, joint=None)
+    # 遍历 右
+    height = 265
+    for i in range(index + 1, index + 5):
+        new_img = image_paste(np_logo.resize((70, 70)), new_img, (975 + 50, height + 5))
+        gamemode_name = game_mode[top_list[i]["gamemodeName"]]
+        draw.text((1160, height), f'{gamemode_name}', fill="white", font=ch_text_font4_5)
+        draw.text((1160, height + 45), f'击杀：{top_list[i]["kills"]}', fill="white", font=ch_text_font4)
+
+        draw.text((1380, height), f'KPM：{top_list[i]["kpm"]}', fill="white", font=ch_text_font4)
+        draw.text((1380, height + 45), f'场次：{top_list[i]["matches"]}', fill="white", font=ch_text_font4)
+
+        draw.text((1660, height), f'胜率：{top_list[i]["winPercent"]}', fill="white", font=ch_text_font4)
+        draw.text((1660, height + 45), f'时长：{int(int(top_list[i]["secondsPlayed"]) / 3600 + 0.55)} H',
+                  fill="white",
+                  font=ch_text_font4)
+        height += 200
+        # 图片处理完成 发送
+    return new_img
+
+
+async def draw_maps(new_img, data, sv):
+    draw = ImageDraw.Draw(new_img)
+    # 10.绘制武器框
+    new_img = draw_rect(new_img, (25, 205, 1920 - 25, 1080 - 25), 10, fill=(0, 0, 0, 150))
+
+    # 武器击杀数排序
+    top_list = sorted(data["maps"], key=lambda k: k['wins'], reverse=True)
+    # 载入字体
+    ch_text_font4 = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
+    en_text_font4 = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 32)
+    ch_text_font4_5 = ImageFont.truetype(filepath + '/font/msyh.ttc', 32)
+
+    # 遍历 左
+    height = 220
+    index = 0
+    for i in range(0, 8):
+        new_img = image_paste(get_top_object_img(top_list[i], sv).resize((150, 60)), new_img, (50, height+15))
+        map_name = map_list[top_list[i]["mapName"]]
+        draw.text((230, height), f'{map_name}', fill="white", font=ch_text_font4_5)
+        draw.text((230, height + 45), f'获胜：{top_list[i]["wins"]}', fill="white", font=ch_text_font4)
+
+        draw.text((450, height), f'场次：{top_list[i]["matches"]}', fill="white", font=ch_text_font4)
+        draw.text((450, height + 45), f'胜率：{top_list[i]["winPercent"]}', fill="white", font=ch_text_font4)
+
+        draw.text((730, height), f'失败：{top_list[i]["losses"]}', fill="white", font=ch_text_font4)
+        draw.text((730, height + 45), f'时长：{int(int(top_list[i]["secondsPlayed"]) / 3600 + 0.55)} H',
+                  fill="white",
+                  font=ch_text_font4)
+        if i != 7:
+            # 绘制虚线
+            new_img = await draw_point_line(new_img, start_point=(50, height + 90), end_point=(1870, height + 90),
+                                            line_color='lightgreen')
+        height += 105
+        index = i
+
+    # 分割线
+    draw.line([950, 225, 950, 1030], fill="white", width=5, joint=None)
+    # 遍历 右
+    height = 220
+    for i in range(index + 1, index + 9):
+        new_img = image_paste(get_top_object_img(top_list[i], sv).resize((150, 60)), new_img, (975, height+15))
+        map_name = map_list[top_list[i]["mapName"]]
+        draw.text((1160, height), f'{map_name}', fill="white", font=ch_text_font4_5)
+        draw.text((1160, height + 45), f'获胜：{top_list[i]["wins"]}', fill="white", font=ch_text_font4)
+
+        draw.text((1380, height), f'场次：{top_list[i]["matches"]}', fill="white", font=ch_text_font4)
+        draw.text((1380, height + 45), f'胜率：{top_list[i]["winPercent"]}', fill="white", font=ch_text_font4)
+
+        draw.text((1660, height), f'失败：{top_list[i]["losses"]}', fill="white", font=ch_text_font4)
+        draw.text((1660, height + 45), f'时长：{int(int(top_list[i]["secondsPlayed"]) / 3600 + 0.55)} H',
+                  fill="white",
+                  font=ch_text_font4)
+        height += 105
+        # 图片处理完成 发送
+    return new_img
 
 
 async def draw_gadgets(new_img, data, sv):
