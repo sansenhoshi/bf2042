@@ -28,3 +28,16 @@ async def change_user_support(uid, support):
 async def check_user_support(uid):
     res = await check_user_support_by_qq_id(uid)
     return res
+
+
+# 修改群审批
+async def change_group_approve_status(group_id, approve):
+    res = await change_group_approve(group_id, approve)
+    return res
+
+
+# 检查群审批
+async def check_group_approve_status(group_id):
+    res = await check_group_approve(group_id)
+    return res
+
