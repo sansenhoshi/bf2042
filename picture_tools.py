@@ -169,6 +169,16 @@ def get_top_object_img(object_data, sv):
                 sv.logger.info(f"未检测到{object_name}物品图标，缓存至本地")
                 img = Image.open(BytesIO(requests.get(img_url).content)).convert('RGBA')
                 img.save(filepath + f"/img/object_icon/{object_name}.png")
+        elif "mapName" in object_data:
+            object_name = object_data["mapName"]
+            if object_name in str(obj_name):
+                sv.logger.info(f"本地已存在{object_name}物品图标")
+                img = Image.open(f"{path}{object_name}.png").convert('RGBA')
+            else:
+                sv.logger.info(f"未检测到{object_name}物品图标，缓存至本地")
+                img = Image.open(BytesIO(requests.get(img_url).content)).convert('RGBA')
+                img.save(filepath + f"/img/object_icon/{object_name}.png")
+
     except Exception as err:
         print(err)
     return img
