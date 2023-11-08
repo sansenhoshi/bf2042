@@ -7,7 +7,8 @@ from .config import *
 
 # 创建数据库连接引擎
 
-engine = create_engine(f'mysql+pymysql://{USERNAME}:{PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}?charset=utf8mb4')
+engine = create_engine(
+    f'mysql+pymysql://{USERNAME}:{PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}?charset=utf8mb4')
 
 # 创建会话工厂
 Session = sessionmaker(bind=engine)
@@ -24,6 +25,13 @@ class UserBind(Base):
     nucleusId = Column(String(50))
     personaId = Column(String(50))
     support = Column(Integer)
+
+
+class WhiteList(Base):
+    __tablename__ = 'white_list'
+    id = Column(Integer, primary_key=True)
+    group_id = Column(Integer)
+    approve = Column(Integer)
 
 
 # 创建会话对象并执行查询操作
@@ -180,3 +188,39 @@ async def check_user_support_by_qq_id(uid):
         print(f"查询失败！{error}")
     session.close()
     return check_res
+
+
+async def check_group_approve(group_id):
+    try:
+        result = session.query(WhiteList).filter_by(group_id=group_id).first()
+        if result.approve == 1:
+            check_res = (True, result.group_id)
+        else:
+            check_res = (False, 0)
+    except Exception as error:
+        check_res = (False, -1)
+        print(f"查询失败！{error}")
+    session.close()
+    return check_res
+
+
+# 修改群审批
+async def change_group_approve(group_id, approve):
+    result = session.query(WhiteList).filter_by(group_id=group_id).first()
+    if result:
+        original_id = result.id
+        result.approve = approve
+        session.commit()
+        create_res = (True, f"群 {result.group_id} 审批状态 {result.approve}")
+    else:
+        new_white_list = WhiteList(
+            group_id=group_id,
+            approve=approve
+        )
+        # 添加模型对象到会话
+        session.add(new_white_list)
+        # 提交事务
+        session.commit()
+        # 输出新增记录信息
+        create_res = (True, f"群 {new_white_list.group_id} 审批状态 {new_white_list.approve}")
+        session.close()
