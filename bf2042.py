@@ -121,7 +121,7 @@ bf_object_dice = {
     "K98": "K98",
     "G3A3": "G3A3",
     "AS Val": "AS Val",
-    "M1 Garand Sniper": "M1 加兰德 狙击",
+    "M1 Garand Sniper": "M1加兰德 狙击",
     "M16A2": "M16A2",
     "No 4": "No 4",
     "No 4 Sniper": "4号 狙击",
@@ -133,7 +133,7 @@ bf_object_dice = {
     "Super 500": "超级500",
     "RM68": "RM68",
     "MTAR-21": "MTAR-21",
-    "Mk VI Revolver": "Mk VI 左轮",
+    "Mk VI Revolver": "MkVI 左轮",
     "RPK-74M": "RPK-74M",
     "XCE BAR": "XCE BAR",
     "GEW-46": "GEW-46",
@@ -200,7 +200,7 @@ bf_object_dice = {
     "Polaris RZR": "北极星RZR",
     "Su-25TM Frogfoot": "Su-25TM 蛙足",
     "Mi-24 Hind": "Mi-24 雌鹿",
-    "BMD-3": "BMD-3步兵战车",
+    "BMD-3": "BMD3步兵车",
     "Tuk-Tuk": "嘟嘟车",
     "4x4 Utility": "固定防空炮",
     "UAV-1": "UAV-1",
@@ -1201,7 +1201,13 @@ async def draw_vehicles(new_img, data, sv):
     height = 220
     for i in range(index + 1, index + 9):
         new_img = image_paste(get_top_object_img(top_list[i], sv).resize((160, 40)), new_img, (975, height + 25))
-        vehicle_name = bf_object_dice[top_list[i]["vehicleName"]]
+        if not top_list[i].get("vehicleName"):
+            if top_list[i].get("type"):
+                vehicle_name = bf_object_dice[top_list[i].get("type")]
+            else:
+                vehicle_name = top_list[i].get("id")
+        else:
+            vehicle_name = bf_object_dice.get(top_list[i]["vehicleName"], top_list[i]["vehicleName"])
         draw.text((1160, height), f'{vehicle_name}', fill="white", font=ch_text_font4_5)
         draw.text((1160, height + 45), f'击杀：{top_list[i]["kills"]}', fill="white", font=ch_text_font4)
 
