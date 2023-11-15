@@ -144,12 +144,12 @@ bf_object_dice = {
     "G3": "G3",
     "Panzerschreck": "坦克杀手",
     "VHX D3": "VHX D3",
-    "MD540 Nightbird": "MD540夜莺",
-    "F-35E Panther": "F-35E黑豹",
+    "MD540 Nightbird": "MD540 夜莺",
+    "F-35E Panther": "F-35E 黑豹",
     "M5C Bolte": "M5C 博尔特",
     "AH-64GX Apache Warchief": "阿帕奇",
-    "MV-38 Condor": "MV-38鱼鹰",
-    "EBAA Wildcat": "EBAA小野猫",
+    "MV-38 Condor": "MV-38 鱼鹰",
+    "EBAA Wildcat": "EBAA 小野猫",
     "M1A5": "M1A5",
     "RAH-68 Huron": "RAH-68 休伦",
     "LATV4 Recon": "LATV4 侦察",
@@ -189,7 +189,7 @@ bf_object_dice = {
     "9K22 Tunguska-M": "通古斯卡-M",
     "T-90": "T-90",
     "3937 Vodnik": "3937 沃德尼克",
-    "Z-11W": "Z-11W",
+    "Z-11W": "直-11W",
     "Mi-28 Havoc": "Mi-28 浩劫",
     "Panzer IV": "四号坦克",
     "KA-520 Super Hokum": "卡520",
@@ -1171,7 +1171,13 @@ async def draw_vehicles(new_img, data, sv):
     index = 0
     for i in range(0, 8):
         new_img = image_paste(get_top_object_img(top_list[i], sv).resize((160, 40)), new_img, (50, height + 25))
-        vehicle_name = bf_object_dice[top_list[i]["vehicleName"]]
+        if not top_list[i].get("vehicleName"):
+            if top_list[i].get("type"):
+                vehicle_name = bf_object_dice[top_list[i].get("type")]
+            else:
+                vehicle_name = top_list[i].get("id")
+        else:
+            vehicle_name = bf_object_dice.get(top_list[i]["vehicleName"], top_list[i]["vehicleName"])
         draw.text((230, height), f'{vehicle_name}', fill="white", font=ch_text_font4_5)
         draw.text((230, height + 45), f'击杀：{top_list[i]["kills"]}', fill="white", font=ch_text_font4)
 
@@ -1397,7 +1403,7 @@ async def draw_maps(new_img, data, sv):
     height = 220
     index = 0
     for i in range(0, 8):
-        new_img = image_paste(get_top_object_img(top_list[i], sv).resize((150, 60)), new_img, (50, height+15))
+        new_img = image_paste(get_top_object_img(top_list[i], sv).resize((150, 60)), new_img, (50, height + 15))
         map_name = map_list[top_list[i]["mapName"]]
         draw.text((230, height), f'{map_name}', fill="white", font=ch_text_font4_5)
         draw.text((230, height + 45), f'获胜：{top_list[i]["wins"]}', fill="white", font=ch_text_font4)
@@ -1421,7 +1427,7 @@ async def draw_maps(new_img, data, sv):
     # 遍历 右
     height = 220
     for i in range(index + 1, index + 9):
-        new_img = image_paste(get_top_object_img(top_list[i], sv).resize((150, 60)), new_img, (975, height+15))
+        new_img = image_paste(get_top_object_img(top_list[i], sv).resize((150, 60)), new_img, (975, height + 15))
         map_name = map_list[top_list[i]["mapName"]]
         draw.text((1160, height), f'{map_name}', fill="white", font=ch_text_font4_5)
         draw.text((1160, height + 45), f'获胜：{top_list[i]["wins"]}', fill="white", font=ch_text_font4)
