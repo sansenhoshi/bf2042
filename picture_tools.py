@@ -342,6 +342,7 @@ def cut_image(pic_data: bytes, target_ratio: float):
 
 
 # 加logo
+# 加logo
 def paste_ic_logo(img):
     """
     将logo贴到图片上
@@ -358,9 +359,30 @@ def paste_ic_logo(img):
     draw = ImageDraw.Draw(img)
     img = draw_rect(img, (25, 1058, 1895, 1078), 1, fill=(0, 0, 0, 150))
     draw.text((30, 1056), "Data Source From : GAMETOOLS.NETWORK", fill="white", font=en_text_font)
-    draw.text((700, 1056), "BF2042 Player‘s Status Plugin Designed By", fill="white", font=en_text_font)
-    img = image_paste(logo_file, img, (1040, 1058))
-    draw.text((1065, 1056), "SANSENHOSHI", fill="skyblue", font=en_text_font)
+    data_text_length = draw.textlength("Data Source From : GAMETOOLS.NETWORK", en_text_font)
+    support_text = "友情赞助："
+    support_text_length = draw.textlength(support_text, ch_text_font)
+    support_text2 = "帕科   BiliBili直播间：850164"
+    img = image_paste(logo_file, img, (round(support_text_length+data_text_length+60), 1058))
+    draw.text((data_text_length+60, 1058), support_text, fill="white", font=ch_text_font)
+    draw.text((data_text_length + 90 + support_text_length, 1058), support_text2, fill="gold", font=ch_text_font)
+    # 编写插件信息
+    plugin_info = "Plugin Designed By"
+    plugin_info2 = "SANSENHOSHI"
+    # 文字1位置
+    plugin_info_width = draw.textlength(plugin_info, en_text_font)
+    # 文字2位置
+    plugin_info2_width = draw.textlength(plugin_info2, en_text_font)
+    # 计算中间位置
+    pos1 = (((1920 - plugin_info_width - plugin_info2_width - 40) / 2), 1056)
+    draw.text(pos1, plugin_info, fill="white", font=en_text_font)
+    pos2 = (((1920 - plugin_info_width - plugin_info2_width - 40) / 2)+plugin_info_width+40, 1056)
+    # 图片位置
+
+    pos3 = (round(((1920 - plugin_info_width - plugin_info2_width - 40) / 2) + plugin_info_width+10), 1058)
+    img = image_paste(logo_file, img, pos3)
+    draw.text(pos2, plugin_info2, fill="skyblue", font=en_text_font)
+
     draw.text((1400, 1058), "友情合作：", fill="white", font=ch_text_font)
     draw.text((1500, 1058), "铁幕重工：224077009", fill="#99CC00", font=ch_text_font)
     draw.text((1700, 1058), "贴吧官群：559190861", fill="#99CC00", font=ch_text_font)
