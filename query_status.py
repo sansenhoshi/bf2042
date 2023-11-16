@@ -54,6 +54,7 @@ _freq_lmt = FreqLimiter(30)
 
 @sv.on_prefix('.2042战绩')
 async def query_player1(bot, ev):
+    start_time = time.time()
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     # 修改个人cd为群cd缓解接口压力
@@ -79,7 +80,9 @@ async def query_player1(bot, ev):
         # 检查玩家是否存在
         if data[0]:
             img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
-            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
+            end_time = time.time()
+            elapsed_time = round(end_time - start_time, 3)
+            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
             # 发送图片
             await bot.send(ev, msg)
         # 判断是否存在错误
@@ -149,6 +152,7 @@ async def query_data(player, platform):
 
 @sv.on_prefix('.盒')
 async def query_player2(bot, ev):
+    start_time = time.time()
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     # 修改个人cd为群cd缓解接口压力
@@ -176,7 +180,9 @@ async def query_player2(bot, ev):
         # 检查玩家是否存在
         if data[0]:
             img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
-            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
+            end_time = time.time()
+            elapsed_time = round(end_time - start_time, 3)
+            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
             # 发送图片
             await bot.send(ev, msg)
         # 判断是否存在错误
@@ -196,6 +202,7 @@ async def query_player2(bot, ev):
 
 @sv.on_prefix(('.武器', '.载具', '.专家', '.配备', '.地图', '.模式'), only_to_me=False)
 async def query_player_weapon(bot, ev):
+    start_time = time.time()
     query_type = {
         '.武器': 0,
         '.载具': 1,
@@ -234,7 +241,9 @@ async def query_player_weapon(bot, ev):
         if data[0]:
             img_mes = await bf2042_total(data[1], platform, ev, sv, match)
             # 发送图片
-            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
+            end_time = time.time()
+            elapsed_time = round(end_time - start_time, 3)
+            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
             await bot.send(ev, msg)
         # 判断是否存在错误
         else:
@@ -602,6 +611,7 @@ async def query_vehicles(bot, ev):
 
 @sv.on_prefix('.2042ps端战绩')
 async def query_player3(bot, ev):
+    start_time = time.time()
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     # 修改个人cd为群cd缓解接口压力
@@ -628,7 +638,9 @@ async def query_player3(bot, ev):
         if data[0]:
             img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
             # 发送图片
-            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
+            end_time = time.time()
+            elapsed_time = round(end_time - start_time, 3)
+            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
             await bot.send(ev, msg)
         # 判断是否存在错误
         else:
@@ -647,6 +659,7 @@ async def query_player3(bot, ev):
 
 @sv.on_prefix('.2042xbox端战绩')
 async def query_player4(bot, ev):
+    start_time = time.time()
     mes_id = ev['message_id']
     player = ev.message.extract_plain_text().strip()
     # 修改个人cd为群cd缓解接口压力
@@ -673,7 +686,9 @@ async def query_player4(bot, ev):
         if data[0]:
             img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
             # 发送图片
-            msg = f"[CQ:reply,id={mes_id}][CQ:image,file={img_mes}]"
+            end_time = time.time()
+            elapsed_time = round(end_time - start_time, 3)
+            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
             await bot.send(ev, msg)
         # 判断是否存在错误
         else:
