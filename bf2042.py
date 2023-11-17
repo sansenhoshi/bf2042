@@ -759,7 +759,8 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
 
     # 添加BF ban 检测结果
     bf_ban_res = await get_bf_ban_check(data["userName"], data["userId"], data["id"])
-    draw.text((400, 16), f'联BAN查询：' + f'{bf_ban_res}', fill="#5093ff", font=ch_text_font)
+    ch_text_font_s = ImageFont.truetype(filepath + '/font/msyh.ttc', 16)
+    draw.text((400, 18), f'联BAN查询：' + f'{bf_ban_res}', fill="#5093ff", font=ch_text_font_s)
 
     # 数据5 简易检测器
     weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
@@ -793,7 +794,7 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
             final = "薯薯，别拷打我了哥>_<（KFC-VIVO-50）"
             color = "skyblue"
 
-    draw.text((400, 0), f'{final}', fill=f"{color}", font=ch_text_font)
+    draw.text((400, 0), f'{final}', fill=f"{color}", font=ch_text_font_s)
 
     draw.text((5, 15), '玩家名称：' + player, fill='white', font=ch_text_font)
     draw.text((5, 38), '击杀：' + str(kills) + '，KD：' + str(killDeath) + '，KPM：' + str(killPerMin) + '，步战KD：' + str(
@@ -805,7 +806,8 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
     for index in range(0, 10):
         height = 100 + 20 * index
         draw.text((5, height), str(index + 1) + ' : ', fill='white', font=ch_text_font)
-        draw.text((50, height), weapons.loc[index]['weaponName'], fill='white', font=ch_text_font)
+        weapon_name = bf_object_dice[weapons.loc[index]['weaponName']]
+        draw.text((50, height), weapon_name, fill='white', font=ch_text_font)
         draw.text((150, height), '击杀数：' + str(weapons.loc[index]['kills']), fill='white', font=ch_text_font)
         draw.text((300, height), 'KPM：' + str(weapons.loc[index]['killsPerMinute']), fill='white', font=ch_text_font)
         draw.text((420, height), '爆头率：' + str(weapons.loc[index]['headshots']), fill='white', font=ch_text_font)
@@ -815,7 +817,8 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
     for index in range(0, 10):
         height = 320 + 20 * index
         draw.text((5, height), str(index + 1) + ' : ', fill='white', font=ch_text_font)
-        draw.text((50, height), str(vehicles.loc[index]['vehicleName']), fill='white', font=ch_text_font)
+        vehicle_name = bf_object_dice[str(vehicles.loc[index]['vehicleName'])]
+        draw.text((50, height), vehicle_name, fill='white', font=ch_text_font)
         draw.text((250, height), '击杀数：' + str(vehicles.loc[index]['kills']), fill='white', font=ch_text_font)
         draw.text((400, height), 'KPM：' + str(vehicles.loc[index]['killsPerMinute']), fill='white', font=ch_text_font)
         draw.text((520, height), '摧毁数：' + str(vehicles.loc[index]['destroyed']), fill='white', font=ch_text_font)
