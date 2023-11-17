@@ -877,6 +877,10 @@ async def add_white_user(bot, ev):
             data1 = await bot.get_group_member_info(group_id=cu_gid, user_id=white_id)
             nickname = data1['card'] if len(data1['card']) != 0 else data1['nickname']
             if await change_user_support(white_id, 1):
+                # 检查路径是否存在
+                bg_path = filepath + f"/img/bg/user/{white_id}/"
+                if not os.path.exists(bg_path):
+                    os.makedirs(bg_path)
                 await bot.send(ev, f"[CQ:reply,id={mes_id}] 添加 {nickname}->成功")
         else:
             await bot.finish(ev, f'[CQ:reply,id={mes_id}] 添加失败')
