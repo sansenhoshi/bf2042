@@ -51,7 +51,7 @@ sv = Service('2042战绩查询', help_='''
 感谢帕科的支持 B站关注直播间：850164 谢谢喵
 '''.strip())
 # 限频器 30S冷却
-_freq_lmt = FreqLimiter(30)
+_freq_lmt = FreqLimiter(15)
 
 
 @sv.on_prefix('.2042战绩')
@@ -78,6 +78,9 @@ async def query_player1(bot, ev):
             return
     await bot.send(ev, '查询中，请耐心等待...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -178,6 +181,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, f'正在查询 {player} 的数据，请耐心等待...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -238,6 +244,9 @@ async def query_player_weapon(bot, ev):
 
     await bot.send(ev, f'正在查询 {player} {str(cmd).replace(".","")} 数据，请耐心等待...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -287,6 +296,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, '查询中，请耐心等待...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -332,6 +344,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, '查询中，请稍等...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -377,6 +392,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, '查询中，请稍等...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -422,6 +440,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, '查询中，请稍等...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -467,6 +488,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, '查询中，请稍等...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -512,6 +536,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, '查询中，请稍等...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -557,6 +584,9 @@ async def query_player2(bot, ev):
 
     await bot.send(ev, '查询中，请稍等...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -605,6 +635,9 @@ async def query_vehicles(bot, ev):
     await bot.send(ev, '查询时间较长，请耐心等待...')
     try:
         # 获取服务器信息列表
+        # 添加一条查询记录
+        await add_query_record(player=server_name, qq_id=uid)
+        # 获取玩家数据
         mes = await get_server_list(server_name, sv)
     except Exception as err:
         mes = f"异常:{err}"
@@ -635,6 +668,9 @@ async def query_player3(bot, ev):
             return
     await bot.send(ev, f'正在查询 {player} 的数据，请耐心等待...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
@@ -683,6 +719,9 @@ async def query_player4(bot, ev):
             return
     await bot.send(ev, f'正在查询 {player} 的数据，请耐心等待...')
     try:
+        # 添加一条查询记录
+        await add_query_record(player=player, qq_id=uid)
+        # 获取玩家数据
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
