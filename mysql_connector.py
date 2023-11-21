@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
-
+from datetime import datetime
 from .config import *
 
 # 创建数据库连接引擎
@@ -227,7 +227,7 @@ async def change_group_approve(group_id, approve):
 
 
 class QueryRecord(Base):
-    __tablename__ = 'user_bind'
+    __tablename__ = 'total_record'
     id = Column(Integer, primary_key=True)
     player = Column(String(50))
     qq_id = Column(String(50))
