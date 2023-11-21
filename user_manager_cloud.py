@@ -41,3 +41,7 @@ async def check_group_approve_status(group_id):
     res = await check_group_approve(group_id)
     return res
 
+
+async def add_query_record(player, qq_id):
+    await create_query_record(player, qq_id)
+

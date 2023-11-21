@@ -224,3 +224,31 @@ async def change_group_approve(group_id, approve):
         # 输出新增记录信息
         create_res = (True, f"群 {new_white_list.group_id} 审批状态 {new_white_list.approve}")
         session.close()
+
+
+class QueryRecord(Base):
+    __tablename__ = 'user_bind'
+    id = Column(Integer, primary_key=True)
+    player = Column(String(50))
+    qq_id = Column(String(50))
+    create_time = Column(DateTime)
+
+
+async def create_query_record(player, qq_id):
+    # 获取当前时间
+    create_time = datetime.now()
+    # 创建模型对象
+    new_record = QueryRecord(
+        player=player,
+        qq_id=qq_id,
+        create_time=create_time
+    )
+    try:
+        # 添加模型对象到会话
+        session.add(new_record)
+        # 提交事务
+        session.commit()
+    except IntegrityError as error:
+        # 捕捉唯一键冲突异常
+        session.rollback()
+        print(f"{error}")
