@@ -152,7 +152,13 @@ def get_top_object_img(object_data, sv):
                 img = Image.open(BytesIO(requests.get(img_url).content)).convert('RGBA')
                 img.save(filepath + f"/img/object_icon/{object_name}.png")
         elif "vehicleName" in object_data:
-            object_name = object_data["vehicleName"]
+            if not object_data.get("vehicleName"):
+                if object_data.get("type"):
+                    object_name = bf_object_dice[top_list[i].get("type")]
+                else:
+                    object_name = top_list[i].get("id")
+            else:
+                object_name = object_data["vehicleName"]
             if object_name in str(obj_name):
                 sv.logger.info(f"本地已存在{object_name}物品图标")
                 img = Image.open(f"{path}{object_name}.png").convert('RGBA')
