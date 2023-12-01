@@ -279,7 +279,8 @@ bf_object_dice = {
     "Call In Tablet": "平板电脑",
     "Intel Scanner": "扫描套件",
     "AT-Mine": "反坦克地雷",
-    "Stick Grenade": "手榴弹"
+    "Stick Grenade": "手榴弹",
+    "G428": "G428"
 }
 
 ban_reason = {
@@ -689,9 +690,16 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
         else:
             draw.line([975, line_height, 975, line_height + 80], fill="#66CCFF", width=5, joint=None)
             line_height += 110
+        if not top_vehicles_list[n].get("vehicleName"):
+            if top_vehicles_list[n].get("type"):
+                vehicle_name = top_vehicles_list[n].get("type")
+            else:
+                vehicle_name = top_vehicles_list[n].get("id")
+        else:
+            vehicle_name = top_vehicles_list[n]["vehicleName"]
         new_img = image_paste(get_top_object_img(top_vehicles_list[n], sv).resize((320, 80)), new_img,
                               (980, height + 5))
-        draw.text((1325, height), f'{top_vehicles_list[n]["vehicleName"]}', fill="white", font=en_text_font4)
+        draw.text((1325, height), f'{vehicle_name}', fill="white", font=en_text_font4)
         draw.text((1325, height + 45), f'击杀：{top_vehicles_list[n]["kills"]}', fill="white", font=ch_text_font4)
         draw.text((1630, height), f'KPM：{top_vehicles_list[n]["killsPerMinute"]}', fill="white", font=ch_text_font4)
         draw.text((1630, height + 45), f'摧毁数：{top_vehicles_list[n]["vehiclesDestroyedWith"]}', fill="white",
