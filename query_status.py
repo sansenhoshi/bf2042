@@ -16,7 +16,7 @@ from nonebot import permission as perm
 
 sv = Service('2042战绩查询', help_='''
 常规----------
-[.盒  ID]  PC战绩查询
+[.查  ID]  PC战绩查询
 [.武器+ID] 查询武器数据
 [.枪械+ID] 另一种查询武器数据的方法
 [.载具+ID] 查询载具数据
