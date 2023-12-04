@@ -524,6 +524,7 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
     # 神射手距离
     total_long_distance = data['dividedKills']['longDistance']
     p_round_long_distance = data['dividedKills']['inRound']['longDistance']
+    playerTakeDowns = data['playerTakeDowns']
     # 最佳小队
     best_squad = "最佳小队：" + str(data["bestSquad"])
     best_show = random.choice((mvp, best_squad))
@@ -531,7 +532,7 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
     draw.text((1368, 30), f'游玩场数: {matches}', fill='white', font=ch_text_font2)
     draw.text((1368, 80), f'{best_show}', fill='white', font=ch_text_font2)
     ch_text_font_s = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
-    draw.text((1368, 130), f'神射手(累计): {total_long_distance} 米', fill='white', font=ch_text_font_s)
+    draw.text((1368, 130), f'处决: {playerTakeDowns}', fill='white', font=ch_text_font_s)
 
     # 10.绘制生涯框
     new_img = draw_rect(new_img, (25, 205, 1920 - 25, 455), 10, fill=(0, 0, 0, 150))
@@ -967,6 +968,7 @@ async def bf2042_total(data, platform, ev, sv, match):
     # 神射手距离
     total_long_distance = data['dividedKills']['longDistance']
     p_round_long_distance = data['dividedKills']['inRound']['longDistance']
+    playerTakeDowns = data['playerTakeDowns']
     # 最佳小队
     best_squad = "最佳小队：" + str(data["bestSquad"])
     best_show = random.choice((mvp, best_squad))
@@ -974,7 +976,7 @@ async def bf2042_total(data, platform, ev, sv, match):
     draw.text((1368, 30), f'游玩场数: {matches}', fill='white', font=ch_text_font2)
     draw.text((1368, 80), f'{best_show}', fill='white', font=ch_text_font2)
     ch_text_font_s = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 32)
-    draw.text((1368, 130), f'神射手(累计): {total_long_distance} 米', fill='white', font=ch_text_font_s)
+    draw.text((1368, 130), f'处决: {playerTakeDowns}', fill='white', font=ch_text_font_s)
     if match == 0:
         new_img = await draw_weapons(new_img, data, sv)
     elif match == 1:
