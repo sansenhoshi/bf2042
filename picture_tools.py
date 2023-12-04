@@ -347,6 +347,9 @@ def cut_image(pic_data: bytes, target_ratio: float):
         raise Exception(f"图片剪裁失败{e}")
 
 
+import datetime
+
+
 # 加logo
 # 加logo
 def paste_ic_logo(img):
@@ -364,8 +367,8 @@ def paste_ic_logo(img):
     logo_file = Image.open(ic_logo).convert("RGBA").resize((20, 20))
     draw = ImageDraw.Draw(img)
     img = draw_rect(img, (25, 1058, 1895, 1078), 1, fill=(0, 0, 0, 150))
-    draw.text((30, 1056), "Data Source From : GAMETOOLS.NETWORK", fill="white", font=en_text_font)
-    data_text_length = draw.textlength("Data Source From : GAMETOOLS.NETWORK", en_text_font)
+    draw.text((30, 1056), "Data Source : GAMETOOLS.NETWORK", fill="white", font=en_text_font)
+    data_text_length = draw.textlength("Data Source : GAMETOOLS.NETWORK", en_text_font)
     support_text = "友情赞助："
     support_text_length = draw.textlength(support_text, ch_text_font)
     support_text2 = "帕科   BiliBili直播间：850164"
@@ -388,6 +391,13 @@ def paste_ic_logo(img):
     pos3 = (round(((1920 - plugin_info_width - plugin_info2_width - 40) / 2) + plugin_info_width+10), 1058)
     img = image_paste(logo_file, img, pos3)
     draw.text(pos2, plugin_info2, fill="skyblue", font=en_text_font)
+
+    # 获取当前时间
+    now = datetime.datetime.now()
+    formatted_time = "查询时间: "+now.strftime("%Y-%m-%d %H:%M:%S")
+    ch_text_font_xss = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 18)
+    time_length = draw.textlength(formatted_time, ch_text_font_xss)
+    draw.text((1400-25-time_length, 1058), f'{formatted_time}', fill='white', font=ch_text_font_xss)
 
     draw.text((1400, 1058), "友情合作：", fill="white", font=ch_text_font)
     draw.text((1500, 1058), "铁幕重工：224077009", fill="#99CC00", font=ch_text_font)
