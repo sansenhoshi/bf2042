@@ -28,27 +28,35 @@ def hacker_check(weapon_data):
     """
     ignore_type = ["DMR", "Bolt Action", "Railguns", "Lever-Action Carbines", "Sidearm", "Crossbows", "Shotguns"]
     sign = []
+    abnormal_weapon = []
     for weapon in weapon_data:
         if weapon["type"] not in ignore_type:
-            sign.append(headshot(weapon))
+            weapon_sign, weapon_info = headshot(weapon)
+            sign.append(weapon_sign)
+            abnormal_weapon.append(weapon_info)
             continue
-    return sign
+    return sign, abnormal_weapon
 
 
 def headshot(weapon):
     sign = 999
+    abnormal_weapon = ""
     if 30.00 <= float(weapon["headshots"].replace('%', "")) and float(weapon["kills"]) >= 100:
         if float(weapon["headshots"].replace('%', "")) <= 40.00:
             if float(weapon["kills"]) < 200:
                 sign = 1
+                abnormal_weapon = weapon
             else:
                 sign = 0
+                abnormal_weapon = weapon
         elif float(weapon["headshots"].replace('%', "")) > 40.00:
             if float(weapon["kills"]) < 200:
                 sign = 2
+                abnormal_weapon = weapon
             else:
                 sign = 3
-    return sign
+                abnormal_weapon = weapon
+    return sign, abnormal_weapon
 
 
 async def get_bf_ban_check(user_name, userids, personaids):
