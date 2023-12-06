@@ -53,7 +53,7 @@ sv = Service('2042战绩查询', help_='''
 # 限频器 30S冷却
 _freq_lmt = FreqLimiter(30)
 
-white_group = [123456789]
+white_group = [630082682]
 
 
 @sv.on_prefix('.2042战绩')
@@ -87,10 +87,14 @@ async def query_player1(bot, ev):
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
-            img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
+            img_mes, abnormal_weapon = await bf_2042_gen_pic(data[1], platform, ev, sv)
             end_time = time.time()
             elapsed_time = round(end_time - start_time, 3)
-            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
+            if abnormal_weapon:
+                img_mes2 = await abnormal_weapon_img(abnormal_weapon)
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]\n[CQ:image,file={img_mes2}]"
+            else:
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
             # 发送图片
             await bot.send(ev, msg)
         # 判断是否存在错误
@@ -158,7 +162,7 @@ async def query_data(player, platform):
     return res
 
 
-@sv.on_prefix('.盒')
+@sv.on_prefix('.查')
 async def query_player2(bot, ev):
     start_time = time.time()
     mes_id = ev['message_id']
@@ -191,10 +195,14 @@ async def query_player2(bot, ev):
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
-            img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
+            img_mes, abnormal_weapon = await bf_2042_gen_pic(data[1], platform, ev, sv)
             end_time = time.time()
             elapsed_time = round(end_time - start_time, 3)
-            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
+            if abnormal_weapon:
+                img_mes2 = await abnormal_weapon_img(abnormal_weapon)
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]\n[CQ:image,file={img_mes2}]"
+            else:
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
             # 发送图片
             await bot.send(ev, msg)
         # 判断是否存在错误
@@ -680,11 +688,15 @@ async def query_player3(bot, ev):
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
-            img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
-            # 发送图片
+            img_mes, abnormal_weapon = await bf_2042_gen_pic(data[1], platform, ev, sv)
             end_time = time.time()
             elapsed_time = round(end_time - start_time, 3)
-            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
+            if abnormal_weapon:
+                img_mes2 = await abnormal_weapon_img(abnormal_weapon)
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]\n[CQ:image,file={img_mes2}]"
+            else:
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
+            # 发送图片
             await bot.send(ev, msg)
         # 判断是否存在错误
         else:
@@ -732,11 +744,15 @@ async def query_player4(bot, ev):
         data = await query_data(player, platform)
         # 检查玩家是否存在
         if data[0]:
-            img_mes = await bf_2042_gen_pic(data[1], platform, ev, sv)
-            # 发送图片
+            img_mes, abnormal_weapon = await bf_2042_gen_pic(data[1], platform, ev, sv)
             end_time = time.time()
             elapsed_time = round(end_time - start_time, 3)
-            msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
+            if abnormal_weapon:
+                img_mes2 = await abnormal_weapon_img(abnormal_weapon)
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]\n[CQ:image,file={img_mes2}]"
+            else:
+                msg = f"[CQ:reply,id={mes_id}]本次查询耗时：{elapsed_time}s[CQ:image,file={img_mes}]"
+            # 发送图片
             await bot.send(ev, msg)
         # 判断是否存在错误
         else:
@@ -1057,7 +1073,7 @@ async def data_check(bot, g_session: RequestSession):
                 answer = match.group(1)
                 data = await query_data(answer, 'pc')
                 if data[0]:
-                    img_mes = await bf_2042_gen_pic(data[1], 'pc', nb_bot, ev, sv)
+                    img_mes, abnormal_weapon = await bf_2042_gen_pic(data[1], 'pc', nb_bot, ev, sv)
                     message = f"用户：“{user_id}”\n" \
                               f"玩家：“{answer}”\n" \
                               f"游戏数据：\n"
