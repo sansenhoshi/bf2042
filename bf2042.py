@@ -608,7 +608,7 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
     weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
 
     # 数据5 简易检测器
-    hacker_check_res = hacker_check(weapon_list)
+    hacker_check_res, abnormal_weapon = hacker_check(weapon_list)
     final = "未知"
     color = "white"
     check_res = False
@@ -618,15 +618,15 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
         color = "#FF9999"
         check_res = True
     elif 2 in hacker_check_res:
-        final = "挂？\n样本太少了"
+        final = "爆头率过高\n样本太少了"
         color = "yellow"
         check_res = True
     elif 1 in hacker_check_res:
-        final = "数据不对？\n样本太少了"
+        final = "数据异常\n样本太少了"
         color = "yellow"
         check_res = True
     elif 0 in hacker_check_res:
-        final = "可疑？\n建议详查"
+        final = "爆头率偏高\n建议详查"
         color = "yellow"
         check_res = True
     if not check_res:
@@ -716,7 +716,9 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
     b_io = BytesIO()
     new_img.save(b_io, format="PNG")
     base64_str = 'base64://' + base64.b64encode(b_io.getvalue()).decode()
-    return base64_str
+    # 过滤空值
+    filtered_list = [x for x in abnormal_weapon if x != '']
+    return base64_str, filtered_list
 
 
 async def bf_2042_simple_pic(data, platform, bot, sv):
@@ -773,7 +775,7 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
 
     # 数据5 简易检测器
     weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
-    hacker_check_res = hacker_check(weapon_list)
+    hacker_check_res, abnormal_weapon = hacker_check(weapon_list)
     final = "未知"
     color = "white"
     check_res = False
@@ -783,7 +785,7 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
         color = "#FF9999"
         check_res = True
     elif 2 in hacker_check_res:
-        final = "挂？样本太少了🤨"
+        final = "爆头率太高？样本太少了🤨"
         color = "yellow"
         check_res = True
     elif 1 in hacker_check_res:
@@ -791,7 +793,7 @@ async def bf_2042_simple_pic(data, platform, bot, sv):
         color = "yellow"
         check_res = True
     elif 0 in hacker_check_res:
-        final = "可疑？建议详查🤨"
+        final = "爆头率偏高？建议详查🤨"
         color = "yellow"
         check_res = True
     if not check_res:
@@ -1043,7 +1045,7 @@ async def bf_2042_gen_property(data, platform, bot, sv, property):
 
     # 数据5 简易检测器
     weapon_list = sorted(data["weapons"], key=lambda k: k['kills'], reverse=True)
-    hacker_check_res = hacker_check(weapon_list)
+    hacker_check_res, abnormal_weapon = hacker_check(weapon_list)
     final = "未知"
     color = "white"
     check_res = False
@@ -1168,7 +1170,7 @@ async def bf_2042_gen_property(data, platform, bot, sv, property):
     b_io = BytesIO()
     new_img.save(b_io, format="PNG")
     base64_str = 'base64://' + base64.b64encode(b_io.getvalue()).decode()
-    return base64_str
+    return base64_str, abnormal_weapon
 
 
 async def draw_vehicles(new_img, data, sv):
