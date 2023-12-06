@@ -4,7 +4,7 @@ import os
 import random
 import time
 from io import BytesIO
-
+import base64
 import aiohttp
 import cairosvg
 import qrcode
@@ -372,8 +372,8 @@ def paste_ic_logo(img):
     support_text = "友情赞助："
     support_text_length = draw.textlength(support_text, ch_text_font)
     support_text2 = "帕科   BiliBili直播间：850164"
-    img = image_paste(logo_file, img, (round(support_text_length+data_text_length+60), 1058))
-    draw.text((data_text_length+60, 1058), support_text, fill="white", font=ch_text_font)
+    img = image_paste(logo_file, img, (round(support_text_length + data_text_length + 60), 1058))
+    draw.text((data_text_length + 60, 1058), support_text, fill="white", font=ch_text_font)
     draw.text((data_text_length + 90 + support_text_length, 1058), support_text2, fill="gold", font=ch_text_font)
     # 编写插件信息
     plugin_info = "Plugin Designed By"
@@ -385,19 +385,19 @@ def paste_ic_logo(img):
     # 计算中间位置
     pos1 = (((1920 - plugin_info_width - plugin_info2_width - 40) / 2), 1056)
     draw.text(pos1, plugin_info, fill="white", font=en_text_font)
-    pos2 = (((1920 - plugin_info_width - plugin_info2_width - 40) / 2)+plugin_info_width+40, 1056)
+    pos2 = (((1920 - plugin_info_width - plugin_info2_width - 40) / 2) + plugin_info_width + 40, 1056)
     # 图片位置
 
-    pos3 = (round(((1920 - plugin_info_width - plugin_info2_width - 40) / 2) + plugin_info_width+10), 1058)
+    pos3 = (round(((1920 - plugin_info_width - plugin_info2_width - 40) / 2) + plugin_info_width + 10), 1058)
     img = image_paste(logo_file, img, pos3)
     draw.text(pos2, plugin_info2, fill="skyblue", font=en_text_font)
 
     # 获取当前时间
     now = datetime.datetime.now()
-    formatted_time = "查询时间: "+now.strftime("%Y-%m-%d %H:%M:%S")
+    formatted_time = "查询时间: " + now.strftime("%Y-%m-%d %H:%M:%S")
     ch_text_font_xss = ImageFont.truetype(filepath + '/font/NotoSansSCMedium-4.ttf', 18)
     time_length = draw.textlength(formatted_time, ch_text_font_xss)
-    draw.text((1400-25-time_length, 1058), f'{formatted_time}', fill='white', font=ch_text_font_xss)
+    draw.text((1400 - 25 - time_length, 1058), f'{formatted_time}', fill='white', font=ch_text_font_xss)
 
     draw.text((1400, 1058), "友情合作：", fill="white", font=ch_text_font)
     draw.text((1500, 1058), "铁幕重工：224077009", fill="#99CC00", font=ch_text_font)
@@ -500,3 +500,30 @@ async def draw_point_line(image, start_point, end_point, line_spacing=5, line_le
     for x in range(start_point[0], end_point[0], line_length + line_spacing):
         draw.line([(x, start_point[1]), (x + line_length, start_point[1])], fill=line_color, width=line_width)
     return image
+
+
+async def abnormal_weapon_img(weapon_data):
+    init_height = 130
+    img_height = init_height + 40 * (len(weapon_data)+5)
+    img_width = 1080
+    img = Image.new('RGB', (img_width, img_height+10), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    ch_text_font = ImageFont.truetype(filepath + '/font/msyh.ttc', 28)
+    draw.text((50, 10), "异常数据", fill="white", font=ch_text_font)
+    # 打印头
+    draw.text((50, 70), "武器名", fill="white", font=ch_text_font)
+    draw.text((295, 70), "击杀数", fill="white", font=ch_text_font)
+    draw.text((540, 70), "爆头率", fill="white", font=ch_text_font)
+    draw.text((785, 70), "命中率", fill="white", font=ch_text_font)
+    # 获取异常武器的信息
+    for weapon in weapon_data:
+        draw.text((50, init_height), f"{weapon['weaponName']}", fill="white", font=ch_text_font)
+        draw.text((295, init_height), f"{weapon['kills']}", fill="white", font=ch_text_font)
+        draw.text((540, init_height), f"{weapon['headshots']}", fill="white", font=ch_text_font)
+        draw.text((785, init_height), f"{weapon['accuracy']}", fill="white", font=ch_text_font)
+        init_height += 40
+
+    b_io = BytesIO()
+    img.save(b_io, format="PNG")
+    base64_str = 'base64://' + base64.b64encode(b_io.getvalue()).decode()
+    return base64_str
