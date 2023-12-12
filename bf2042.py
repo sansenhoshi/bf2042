@@ -140,6 +140,7 @@ bf_object_dice = {
     "BFP.50": "BFP.50",
     "12G Automatic": "12G Automatic",
     "Sten": "斯登冲锋枪",
+    "L9CZ": "L9CZ",
     "Melee": "近战",
     "G3": "G3",
     "Panzerschreck": "坦克杀手",
