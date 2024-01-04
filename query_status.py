@@ -131,7 +131,8 @@ def str_filter(obj_str):
 
 
 async def query_data(player, platform):
-    url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}"
+    url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}&skip_battlelog=false"
+    # url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}"
     headers = {
         'accept': 'application/json'
     }

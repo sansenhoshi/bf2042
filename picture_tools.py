@@ -416,6 +416,7 @@ async def get_avatar(platform_id, persona_id, nucleus_id, sv):
     """
     default_avatar_path = filepath + "/img/class_icon/No-Pats.png"
     try:
+        # url = f"https://api.gametools.network/bfglobal/games/?playerid={nucleus_id}&oid={persona_id}&platform={platform_id}&skip_battlelog=false"
         url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers={'accept': 'application/json'}) as response:
