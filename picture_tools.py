@@ -154,9 +154,9 @@ def get_top_object_img(object_data, sv):
         elif "vehicleName" in object_data:
             if not object_data.get("vehicleName"):
                 if object_data.get("type"):
-                    object_name = bf_object_dice[top_list[i].get("type")]
+                    object_name = object_data.get("type")
                 else:
-                    object_name = top_list[i].get("id")
+                    object_name = object_data.get("id")
             else:
                 object_name = object_data["vehicleName"]
             if object_name in str(obj_name):
