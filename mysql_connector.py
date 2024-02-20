@@ -2,16 +2,18 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError, DisconnectionError
+from sqlalchemy import exc
 from datetime import datetime
 from .config import *
 from hoshino import log
 
 logger = log.new_logger('BF2042-MySQL')
 
-# 创建数据库连接引擎
 
+# 创建数据库连接引擎，配置连接池参数
 engine = create_engine(
-    f'mysql+pymysql://{USERNAME}:{PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}?charset=utf8mb4')
+    f'mysql+pymysql://{USERNAME}:{PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}?charset=utf8mb4',
+    pool_size=500, max_overflow=500, pool_pre_ping=True)
 
 # 创建会话工厂
 Session = sessionmaker(bind=engine)
@@ -80,8 +82,8 @@ async def update_user_player_by_qq_id(uid, player, nucleusId, personaId):
             update_res = (True, f"修改成功，{updated_user_bind.qq_id}玩家名称由{updated_user_bind.player}修改为{new_player_name}")
         else:
             update_res = (False, f"找不到用户{qq_id}绑定记录")
-    except DisconnectionError:
-        connection.connection.ping(reconnect=True)
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         return await update_user_player_by_qq_id(uid, player, nucleusId, personaId)
     except Exception as e:
         update_res = (False, f"异常：{e}")
@@ -109,8 +111,8 @@ async def create_new_user_bind(player, platform, qq_id, nucleusId, personaId, su
         session.commit()
         # 输出新增记录信息
         create_res = (True, f"用户 {new_user_bind.qq_id} 绑定至 {new_user_bind.player}")
-    except DisconnectionError:
-        connection.connection.ping(reconnect=True)
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         return await create_new_user_bind(player, platform, qq_id, nucleusId, personaId, support)
     except IntegrityError as error:
         # 捕捉唯一键冲突异常
@@ -142,8 +144,8 @@ async def check_user_bind_exist(qq_id):
             check_res = (False, 0)
             logger.info(f"QQ号为{qq_id}的没有绑定记录")
     # 添加重连方法
-    except DisconnectionError:
-        connection.connection.ping(reconnect=True)
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         # 递归调用
         return await check_user_bind_exist(qq_id)
     except Exception as error:
@@ -177,8 +179,8 @@ async def update_user_support_by_qq_id(qq_id, support):
             update_res = (True, f"{flag} {user_bind.qq_id} 成功")
         else:
             update_res = (False, f"找不到 {user_bind.qq_id} 绑定记录")
-    except DisconnectionError:
-        connection.connection.ping(reconnect=True)
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         return await update_user_support_by_qq_id(qq_id, support)
     except Exception as error:
         update_res = (False, -1)
@@ -198,7 +200,8 @@ async def delete_user_bind_by_qq_id(qq_id):
             logger.info(f"成功删除QQ号为{qq_id}的绑定记录")
         else:
             logger.info(f"QQ号为{qq_id}的绑定记录不存在")
-    except DisconnectionError:
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         connection.connection.ping(reconnect=True)
         return await delete_user_bind_by_qq_id(qq_id)
     except Exception as error:
@@ -215,8 +218,8 @@ async def check_user_support_by_qq_id(uid):
             check_res = (True, result.player)
         else:
             check_res = (False, 0)
-    except DisconnectionError:
-        connection.connection.ping(reconnect=True)
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         return await check_user_support_by_qq_id(uid)
     except Exception as error:
         check_res = (False, -1)
@@ -234,8 +237,8 @@ async def check_group_approve(group_id):
             check_res = (True, result.group_id)
         else:
             check_res = (False, 0)
-    except DisconnectionError:
-        connection.connection.ping(reconnect=True)
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         return await check_group_approve(group_id)
     except Exception as error:
         check_res = (False, -1)
@@ -290,8 +293,8 @@ async def create_query_record(player, qq_id):
         connection = session.connection()
         # 提交事务
         session.commit()
-    except DisconnectionError:
-        connection.connection.ping(reconnect=True)
+    except (exc.DisconnectionError, exc.TimeoutError) as e:
+        logger.warn(f"数据库连接失败：{str(e)},重试中...")
         return await create_query_record(player, qq_id)
     except IntegrityError as error:
         # 捕捉唯一键冲突异常
