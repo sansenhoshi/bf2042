@@ -61,7 +61,7 @@ _freq_lmt = FreqLimiter(30)
 white_group = [630082682]
 
 
-@sv.on_prefix(('.查', '.武器', '.载具', '.专家', '.配备', '.地图', '.模式'), only_to_me=False)
+# @sv.on_prefix(('.查', '.武器', '.载具', '.专家', '.配备', '.地图', '.模式'), only_to_me=True)
 async def query_player_weapon(bot, ev):
     # 计时器
     start_time = time.time()
