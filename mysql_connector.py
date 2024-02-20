@@ -81,6 +81,7 @@ async def update_user_player_by_qq_id(uid, player, nucleusId, personaId):
         else:
             update_res = (False, f"找不到用户{qq_id}绑定记录")
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         return await update_user_player_by_qq_id(uid, player, nucleusId, personaId)
     except Exception as e:
@@ -110,6 +111,7 @@ async def create_new_user_bind(player, platform, qq_id, nucleusId, personaId, su
         # 输出新增记录信息
         create_res = (True, f"用户 {new_user_bind.qq_id} 绑定至 {new_user_bind.player}")
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         return await create_new_user_bind(player, platform, qq_id, nucleusId, personaId, support)
     except IntegrityError as error:
@@ -143,6 +145,7 @@ async def check_user_bind_exist(qq_id):
             logger.info(f"QQ号为{qq_id}的没有绑定记录")
     # 添加重连方法
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         # 递归调用
         return await check_user_bind_exist(qq_id)
@@ -178,6 +181,7 @@ async def update_user_support_by_qq_id(qq_id, support):
         else:
             update_res = (False, f"找不到 {user_bind.qq_id} 绑定记录")
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         return await update_user_support_by_qq_id(qq_id, support)
     except Exception as error:
@@ -199,6 +203,7 @@ async def delete_user_bind_by_qq_id(qq_id):
         else:
             logger.info(f"QQ号为{qq_id}的绑定记录不存在")
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         return await delete_user_bind_by_qq_id(qq_id)
     except Exception as error:
@@ -216,6 +221,7 @@ async def check_user_support_by_qq_id(uid):
         else:
             check_res = (False, 0)
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         return await check_user_support_by_qq_id(uid)
     except Exception as error:
@@ -235,6 +241,7 @@ async def check_group_approve(group_id):
         else:
             check_res = (False, 0)
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         return await check_group_approve(group_id)
     except Exception as error:
@@ -291,6 +298,7 @@ async def create_query_record(player, qq_id):
         # 提交事务
         session.commit()
     except DisconnectionError:
+        logger.info("数据库连接超时，正在重试...")
         connection.connection.ping(reconnect=True)
         return await create_query_record(player, qq_id)
     except IntegrityError as error:
