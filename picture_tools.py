@@ -12,15 +12,21 @@ import requests
 import requests.exceptions
 from PIL import Image, ImageDraw, ImageFont
 
+# 获取当前文件所在的目录路径
 filepath = os.path.dirname(__file__).replace("\\", "/")
-# 导入
-DLLS_DIR = os.path.dirname(__file__) + r"\dlls"
+
+# 构造 DLLS 目录路径
+DLLS_DIR = filepath + "/dlls"
+
+# 将 DLLS_DIR 添加到系统的 PATH 环境变量中
 os.environ["PATH"] = DLLS_DIR + ";" + os.environ["PATH"]
-# Python >= 3.8 & Python <= 3.9
-os.add_dll_directory(DLLS_DIR)
+
+# 使用 os.add_dll_directory 将目录添加为环境变量
+if hasattr(os, 'add_dll_directory'):
+    os.add_dll_directory(DLLS_DIR)
 
 # 记录URL
-bf_ban_url = "https://api.gametools.network/bfban/checkban"
+bf_ban_url = "https://proxy.sansenhoshi.top/bfban/checkban"
 
 
 # 圆角遮罩处理
@@ -154,9 +160,9 @@ def get_top_object_img(object_data, sv):
         elif "vehicleName" in object_data:
             if not object_data.get("vehicleName"):
                 if object_data.get("type"):
-                    object_name = object_data.get("type")
+                    object_name = bf_object_dice[top_list[i].get("type")]
                 else:
-                    object_name = object_data.get("id")
+                    object_name = top_list[i].get("id")
             else:
                 object_name = object_data["vehicleName"]
             if object_name in str(obj_name):
@@ -416,8 +422,8 @@ async def get_avatar(platform_id, persona_id, nucleus_id, sv):
     """
     default_avatar_path = filepath + "/img/class_icon/No-Pats.png"
     try:
-        # url = f"https://api.gametools.network/bfglobal/games/?playerid={nucleus_id}&oid={persona_id}&platform={platform_id}&skip_battlelog=false"
-        url = f"https://api.gametools.network/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
+        # url = f"https://proxy.sansenhoshi.top/bfglobal/games/?playerid={nucleus_id}&oid={persona_id}&platform={platform_id}&skip_battlelog=false"
+        url = f"https://proxy.sansenhoshi.top/bf2042/feslid/?platformid={platform_id}&personaid={persona_id}&nucleusid={nucleus_id}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers={'accept': 'application/json'}) as response:
                 response.raise_for_status()

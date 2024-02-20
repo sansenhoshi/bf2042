@@ -390,7 +390,7 @@ game_mode = {
 
 '''2042图片战绩生成'''
 filepath = os.path.dirname(__file__).replace("\\", "/")
-bf_ban_url = "https://api.gametools.network/bfban/checkban"
+bf_ban_url = "https://proxy.sansenhoshi.top/bfban/checkban"
 
 
 async def bf_2042_gen_pic(data, platform, ev, sv):
@@ -438,14 +438,15 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
     new_img = image_paste(avatar, new_img, (30, 30))
     # 7.添加用户信息文字
 
-    # # 等级计算
-    # xp = data["XP"][0]["total"]
-    # unit = 93944
-    # level = int((xp \\ unit) + 0.55)
-    # color = 'white'
-    # if int((xp \\ 93944) + 0.55) > 0:
-    #     level = ('S' + str(level - 99))
-    #     color = '#FF3333'
+    # 等级计算
+    level = data["level"]
+    level_s = level - 99
+    if int(level_s) > 0:
+        level = ('S ' + '{:03d}'.format(level_s))
+        color = '#FF3333'
+    else:
+        level = '{:03d}'.format(level)
+        color = 'white'
 
     # 载入字体
     en_text_font = ImageFont.truetype(filepath + '/font/BF_Modernista-Bold.ttf', 36)
@@ -461,12 +462,13 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
         plat = Image.open(filepath + "/img/platform/xbox.png").convert("RGBA").resize((40, 40))
     draw.text((208, 33), '玩家：', fill='white', font=ch_text_font)
     draw.text((308, 30), f'{player_name}', fill='white', font=en_text_font)
-    # 游玩平台
-    # draw.rectangle([208, 120, 248, 160], fill="black")
-    # r, g, b, alpha = plat.split()
-    # new_img.paste(plat, (208, 120), mask=alpha)
-    new_img = image_paste(plat, new_img, (208, 120))
-    draw.text((260, 120), '游玩时长：', fill='white', font=ch_text_font)
+
+    # 等级
+    draw.text((208.5, 79.5), f'LEVEL: ', fill='white', font=en_text_font)
+    draw.text((345, 79.5), f'{level}', fill=f'{color}', font=en_text_font)
+
+    new_img = image_paste(plat, new_img, (207, 130))
+    draw.text((260, 130), '游玩时长：', fill='white', font=ch_text_font)
     time_played = data["timePlayed"]
     if ',' in time_played:
         times = time_played.split(',')
@@ -480,7 +482,7 @@ async def bf_2042_gen_pic(data, platform, ev, sv):
     else:
         time_part2 = Decimal(int(time_played.split(':')[1]) / 60).quantize(Decimal("0.00"))
         time_played = int(time_played.split(':')[0]) + time_part2
-    draw.text((430, 118), f'{time_played} H', fill='white', font=en_text_font)
+    draw.text((430, 127.5), f'{time_played} H', fill='white', font=en_text_font)
     # 8.绘制最佳专家外框
     # 获取兵种图标
     best_class = sorted(data["classes"], key=lambda k: k['kills'], reverse=True)[0]

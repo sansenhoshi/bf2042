@@ -48,7 +48,7 @@ region = {
 
 
 async def get_server_list(server_name, sv):
-    url = f"https://api.gametools.network/bf2042/detailedserver/?name={server_name}&experiencename={server_name}&return_ownername=true&lang=zh-cn"
+    url = f"https://proxy.sansenhoshi.top/bf2042/detailedserver/?name={server_name}&experiencename={server_name}&return_ownername=true&lang=zh-cn"
     async with aiohttp.ClientSession() as session:
         async with session.request("GET", url) as response:
             server_info = await response.json()
@@ -57,7 +57,7 @@ async def get_server_list(server_name, sv):
             owners = [owner_info]
             # 使用服务器owner信息获取服务器其他信息
             owners = json.dumps(owners)
-            url = f"https://api.gametools.network/bf2042/servers/?owners={owners}"
+            url = f"https://proxy.sansenhoshi.top/bf2042/servers/?owners={owners}"
             server_message = "服务器信息\n"
             async with aiohttp.ClientSession() as session2:
                 async with session2.get(url) as response:

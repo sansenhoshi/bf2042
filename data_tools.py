@@ -3,7 +3,7 @@ import json
 import aiohttp
 
 filepath = os.path.dirname(__file__).replace("\\", "/")
-bf_ban_url = "https://api.gametools.network/bfban/checkban"
+bf_ban_url = "https://proxy.sansenhoshi.top/bfban/checkban"
 
 ban_reason = {
     0: "未处理",
@@ -60,7 +60,7 @@ def headshot(weapon):
 
 
 async def get_bf_ban_check(user_name, userids, personaids):
-    url = "https://api.gametools.network/bfban/checkban/"
+    url = "https://proxy.sansenhoshi.top/bfban/checkban/"
     params = {
         "names": user_name,
         "userids": userids,

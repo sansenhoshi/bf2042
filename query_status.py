@@ -51,7 +51,7 @@ sv = Service('2042战绩查询', help_='''
 感谢帕科的支持 B站关注直播间：850164 谢谢喵
 '''.strip())
 # 限频器 30S冷却
-_freq_lmt = FreqLimiter(30)
+_freq_lmt = FreqLimiter(15)
 
 white_group = [630082682]
 
@@ -131,10 +131,25 @@ def str_filter(obj_str):
 
 
 async def query_data(player, platform):
-    url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}&skip_battlelog=false"
+    # url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=false&name={player}&platform={platform}&skip_battlelog=false"
+    url = f"https://proxy.sansenhoshi.top/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}&skip_battlelog=false"
     # url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}"
     headers = {
-        'accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Language': 'zh-HK,zh-CN;q=0.9,zh-TW;q=0.8,zh;q=0.7,en-US;q=0.6,en;q=0.5',
+        'Cache-Control': 'max-age=0',
+        'Connection': 'keep-alive',
+        'DNT': '1',
+        'If-Modified-Since': 'Sun, 18 Feb 2024 12:27:55 GMT',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"'
     }
     res = (False, "数据请求失败喵")
     retry_options = ExponentialRetry(attempts=2, exceptions=(aiohttp.ClientError,))
@@ -143,13 +158,15 @@ async def query_data(player, platform):
             async with r_session.get(url, headers=headers, timeout=15) as response:
                 rest = await response.text()
                 # rest = str_filter(rest)
+                result = json.loads(rest)
                 if response.status == 200:
                     result = json.loads(rest)
                     # 判断是否查询到玩家数据
-                    if 'userName' not in result:
-                        res = (False, "未查询到该玩家")
-                    else:
-                        res = (True, result)
+                    res = (True, result)
+                elif response.status == 404:
+                    res = (False, "未查询到该玩家")
+                else:
+                    res = (False, rest)
         except asyncio.TimeoutError as e:
             if e:
                 res = (False, f"请求超时：{e}")
