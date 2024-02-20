@@ -1,23 +1,53 @@
-import os
+import asyncio
 import json
+
 import aiohttp
-
-filepath = os.path.dirname(__file__).replace("\\", "/")
-bf_ban_url = "https://proxy.sansenhoshi.top/bfban/checkban"
-
-ban_reason = {
-    0: "未处理",
-    1: "石锤",
-    2: "待自证",
-    3: "MOSS自证",
-    4: "无效举报",
-    5: "讨论中",
-    6: "需要更多管理投票",
-    7: "未知原因封禁",
-    8: "刷枪"
-}
+from aiohttp_retry import RetryClient, ExponentialRetry
+from .bf_object_dict import *
 
 
+# 获取玩家数据
+async def query_player_data(player_name, nucleusId, personaId, platform):
+    """
+    :param player_name: 玩家名称
+    :param nucleusId: 平台id
+    :param personaId: 平台个人id
+    :param platform: 游玩平台
+    :return:
+    """
+    # 源数据
+    url = f"https://api.gametools.network/bf2042/stats/?raw=true&format_values=false&name={player}&platform={platform}&skip_battlelog=false"
+    headers = {
+        'accept': 'application/json'
+    }
+    res = (False, "数据请求失败喵")
+    retry_options = ExponentialRetry(attempts=2, exceptions=(aiohttp.ClientError,))
+    async with RetryClient(retry_options=retry_options) as r_session:
+        try:
+            async with r_session.get(url, headers=headers, timeout=15) as response:
+                rest = await response.text()
+                # rest = str_filter(rest)
+                if response.status == 200:
+                    result = json.loads(rest)
+                    # 判断是否查询到玩家数据
+                elif response.status == 404:
+                    res = (False, "未查询到该玩家")
+                else:
+                    res = (True, result)
+        except asyncio.TimeoutError as e:
+            if e:
+                res = (False, f"请求超时：{e}")
+            else:
+                res = (False, f"请求超时：玩家数据请求超时")
+        except aiohttp.ClientError as e:
+            if e:
+                res = (False, f"请求异常：{e}")
+            else:
+                res = (False, f"请求异常：玩家数据请求异常")
+    return res
+
+
+# 简易外挂数据检测
 def hacker_check(weapon_data):
     """
     简易外挂数据检测
@@ -59,8 +89,9 @@ def headshot(weapon):
     return sign, abnormal_weapon
 
 
+# 获取联ban信息
 async def get_bf_ban_check(user_name, userids, personaids):
-    url = "https://proxy.sansenhoshi.top/bfban/checkban/"
+    url = "https://api.gametools.network/bfban/checkban/"
     params = {
         "names": user_name,
         "userids": userids,
@@ -87,80 +118,11 @@ async def get_bf_ban_check(user_name, userids, personaids):
                 else:
                     if "status" in str(res):
                         res_data = search_field_in_json(res, "status")
-                        trans = ban_reason[res_data]
+                        trans = banReason[res_data]
     return trans
 
 
-def search_field_in_json(obj, field_name):
-    """
-    递归搜索 JSON 对象中的指定字段名
-    :param obj: JSON 对象
-    :param field_name: 指定的字段名
-    :return: 找到的字段值，未找到时返回 None
-    """
-    if isinstance(obj, dict):
-        for key, value in obj.items():
-            if key == field_name:
-                return value
-            else:
-                result = search_field_in_json(value, field_name)
-                if result is not None:
-                    return result
-    elif isinstance(obj, list):
-        for item in obj:
-            result = search_field_in_json(item, field_name)
-            if result is not None:
-                return result
-    else:
-        return None
-
-
-async def set_approve(group_id, enable):
-    check_res = await check_approve(group_id)
-    if check_res:
-        return f"群：{group_id}已经存在与审批名单中"
-    else:
-        res = await write_list(group_id, enable)
-        if res:
-            return f"群：{group_id}已添加至审批名单中"
-        else:
-            return f"群：{group_id}添加失败"
-
-
-async def check_approve(group_id):
-    path = filepath + "/data/config.json"
-    # 读取JSON文件
-    with open(path, 'r') as f:
-        data = json.load(f)
-    # 取出特定键的值
-    white_list = data['white_list']
-    if group_id in white_list:
-        return True
-    else:
-        return False
-
-
-async def write_list(group_id, enable):
-    try:
-        path = filepath + "/data/config.json"
-        # 读取JSON文件
-        with open(path, 'r') as f:
-            data = json.load(f)
-
-        # 更新特定键的值
-        white_list = data['white_list']
-        if enable:
-            white_list.append(group_id)
-        else:
-            white_list.remove(group_id)
-        data['white_list'] = white_list
-        print(f"白名单：{white_list}")
-        # 将更新后的数据写入JSON文件
-        with open(path, 'w') as f:
-            json.dump(data, f)
-            f.flush()  # 刷新文件缓冲区
-            f.close()  # 手动关闭文件
-
-        return True
-    except Exception as e:
-        return False
+# 源数据处理
+async def raw_data_proc(raw_data):
+    print(raw_data)
+    return raw_data

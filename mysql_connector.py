@@ -1,9 +1,12 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DisconnectionError
 from datetime import datetime
 from .config import *
+from hoshino import log
+
+logger = log.new_logger('BF2042-MySQL')
 
 # 创建数据库连接引擎
 
@@ -60,6 +63,8 @@ async def update_user_player_by_qq_id(uid, player, nucleusId, personaId):
     try:
         # 查询要更新的用户绑定记录
         user_bind = session.query(UserBind).filter_by(qq_id=uid).first()
+        # 获取连接对象
+        connection = session.connection()
         if user_bind:
             # 获取原始记录的id
             original_id = user_bind.id
@@ -75,6 +80,9 @@ async def update_user_player_by_qq_id(uid, player, nucleusId, personaId):
             update_res = (True, f"修改成功，{updated_user_bind.qq_id}玩家名称由{updated_user_bind.player}修改为{new_player_name}")
         else:
             update_res = (False, f"找不到用户{qq_id}绑定记录")
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        return await update_user_player_by_qq_id(uid, player, nucleusId, personaId)
     except Exception as e:
         update_res = (False, f"异常：{e}")
     session.close()
@@ -93,12 +101,17 @@ async def create_new_user_bind(player, platform, qq_id, nucleusId, personaId, su
         support=support
     )
     try:
+        # 获取连接对象
+        connection = session.connection()
         # 添加模型对象到会话
         session.add(new_user_bind)
         # 提交事务
         session.commit()
         # 输出新增记录信息
         create_res = (True, f"用户 {new_user_bind.qq_id} 绑定至 {new_user_bind.player}")
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        return await create_new_user_bind(player, platform, qq_id, nucleusId, personaId, support)
     except IntegrityError as error:
         # 捕捉唯一键冲突异常
         session.rollback()
@@ -107,10 +120,10 @@ async def create_new_user_bind(player, platform, qq_id, nucleusId, personaId, su
             error_message = error.orig.args[1]
             # 从错误消息中提取冲突的值
             conflict_value = error_message.split("'")[1]
-            print("绑定失败！已存在绑定记录：", conflict_value)
+            logger.info(f"绑定失败！已存在绑定记录：{conflict_value}")
             create_res = (False, f"绑定失败！已存在绑定记录：{conflict_value}")
         else:
-            print("插入失败！已存在绑定记录：", error.orig)
+            logger.warn("插入失败！已存在绑定记录：{error.orig}")
             create_res = (False, f"插入失败！已存在绑定记录：{error.orig}")
     session.close()
     return create_res
@@ -120,15 +133,22 @@ async def create_new_user_bind(player, platform, qq_id, nucleusId, personaId, su
 async def check_user_bind_exist(qq_id):
     try:
         result = session.query(UserBind).filter_by(qq_id=qq_id).first()
+        # 获取连接对象
+        connection = session.connection()
         if result:
             check_res = (True, result.player)
-            print(f"QQ号为{qq_id}的绑定记录存在，用户ID为：{result.player}")
+            logger.info(f"QQ号为{qq_id}的绑定记录存在，用户ID为：{result.player}")
         else:
             check_res = (False, 0)
-            print(f"QQ号为{qq_id}的没有绑定记录")
+            logger.info(f"QQ号为{qq_id}的没有绑定记录")
+    # 添加重连方法
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        # 递归调用
+        return await check_user_bind_exist(qq_id)
     except Exception as error:
         check_res = (False, -1)
-        print(f"查询失败！{error}")
+        logger.warn(f"查询失败！{error}")
     session.close()
     return check_res
 
@@ -137,6 +157,8 @@ async def update_user_support_by_qq_id(qq_id, support):
     try:
         # 查询要更新的用户绑定记录
         user_bind = session.query(UserBind).filter_by(qq_id=qq_id).first()
+        # 获取连接对象
+        connection = session.connection()
         if user_bind:
             # 获取原始记录的id
             original_id = user_bind.id
@@ -155,6 +177,9 @@ async def update_user_support_by_qq_id(qq_id, support):
             update_res = (True, f"{flag} {user_bind.qq_id} 成功")
         else:
             update_res = (False, f"找不到 {user_bind.qq_id} 绑定记录")
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        return await update_user_support_by_qq_id(qq_id, support)
     except Exception as error:
         update_res = (False, -1)
         print(error)
@@ -165,12 +190,17 @@ async def update_user_support_by_qq_id(qq_id, support):
 async def delete_user_bind_by_qq_id(qq_id):
     try:
         result = session.query(UserBind).filter_by(qq_id=qq_id).first()
+        # 获取连接对象
+        connection = session.connection()
         if result:
             session.delete(result)
             session.commit()
-            print(f"成功删除QQ号为{qq_id}的绑定记录")
+            logger.info(f"成功删除QQ号为{qq_id}的绑定记录")
         else:
-            print(f"QQ号为{qq_id}的绑定记录不存在")
+            logger.info(f"QQ号为{qq_id}的绑定记录不存在")
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        return await delete_user_bind_by_qq_id(qq_id)
     except Exception as error:
         print(error)
     session.close()
@@ -179,13 +209,18 @@ async def delete_user_bind_by_qq_id(qq_id):
 async def check_user_support_by_qq_id(uid):
     try:
         result = session.query(UserBind).filter_by(qq_id=uid).first()
+        # 获取连接对象
+        connection = session.connection()
         if result.support == 1:
             check_res = (True, result.player)
         else:
             check_res = (False, 0)
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        return await check_user_support_by_qq_id(uid)
     except Exception as error:
         check_res = (False, -1)
-        print(f"查询失败！{error}")
+        logger.warn(f"查询失败！{error}")
     session.close()
     return check_res
 
@@ -193,13 +228,18 @@ async def check_user_support_by_qq_id(uid):
 async def check_group_approve(group_id):
     try:
         result = session.query(WhiteList).filter_by(group_id=group_id).first()
+        # 获取连接对象
+        connection = session.connection()
         if result.approve == 1:
             check_res = (True, result.group_id)
         else:
             check_res = (False, 0)
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        return await check_group_approve(group_id)
     except Exception as error:
         check_res = (False, -1)
-        print(f"查询失败！{error}")
+        logger.warn(f"查询失败！{error}")
     session.close()
     return check_res
 
@@ -246,8 +286,13 @@ async def create_query_record(player, qq_id):
     try:
         # 添加模型对象到会话
         session.add(new_record)
+        # 获取连接对象
+        connection = session.connection()
         # 提交事务
         session.commit()
+    except DisconnectionError:
+        connection.connection.ping(reconnect=True)
+        return await create_query_record(player, qq_id)
     except IntegrityError as error:
         # 捕捉唯一键冲突异常
         session.rollback()

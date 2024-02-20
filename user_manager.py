@@ -95,7 +95,7 @@ async def bind_user(info):
 
 
 async def get_user_info(player_name, uid, platform):
-    url = f'https://api.gametools.network/bf2042/stats/' \
+    url = f'https://proxy.sansenhoshi.top/bf2042/stats/' \
           f'?raw=false&format_values=true&name={player_name}&platform={platform}&skip_battlelog=false'
     headers = {
         'accept': 'application/json'

@@ -15,43 +15,42 @@ from nonebot import *
 from nonebot import permission as perm
 
 sv = Service('2042战绩查询', help_='''
-常规----------
-[.查  ID]  PC战绩查询
-[.武器+ID] 查询武器数据
-[.枪械+ID] 另一种查询武器数据的方法
-[.载具+ID] 查询载具数据
-[.专家+ID] 查询专家数据
-[.模式+ID] 查询游戏模式数据
-[.地图+ID] 查询地图游玩情况
-[.配备+ID] 查询配备数据
-另一种查询方式----------
-[.数据+ID] 查询文字图片版本玩家数据
-[/枪械+ID] 另一种查询武器数据的方法
-[/载具+ID] 查询载具数据
-[/专家+ID] 查询专家数据
-[/模式+ID] 查询游戏模式数据
-[/地图+ID] 查询地图游玩情况
-[.装置+ID] 查询配备数据
-其他操作----------
-[.2042战绩+ID] PC战绩查询
-[.绑定+ID] 绑定游戏ID到QQ（仅仅支持PC）
-[.修改绑定+ID] 修改绑定的游戏id
-[.2042门户+门户关键字] 查询门户服务器列表
-主机----------
-[.2042xbox端战绩+ID] xbox战绩查询
-[.2042ps端战绩+ID] ps战绩查询
-[.PS绑定+ID] 绑定游戏ID到QQ（仅仅支持PS）
-[.XBOX绑定+ID] 绑定游戏ID到QQ（仅仅支持XBOX）
-特色----------
-[.上传图片] 上传自定义背景（需要请求bot管理员获得）
-[.清空背景] 清空所有背景图片
-入群检测-----
-检测新加群的EA ID
+----------常规----------
+- [.查  ID]  PC战绩查询（盒指令是敏感词）
+- [.2042战绩 ID] PC战绩查询（盒指令是敏感词）
+- [.武器 ID] 查询武器数据
+- [.载具 ID] 查询载具数据
+- [.专家 ID] 查询专家数据
+- [.模式 ID] 查询游戏模式数据
+- [.地图 ID] 查询地图游玩情况
+- [.配备 ID] 查询配备数据
+----------其他----------
+- [.数据+ID] 查询文字图片版本玩家数据
+- [/枪械+ID] 另一种查询武器数据的方法
+- [/载具+ID] 查询载具数据
+- [/专家+ID] 查询专家数据
+- [/模式+ID] 查询游戏模式数据
+- [/地图+ID] 查询地图游玩情况
+- [/装置+ID] 查询配备数据
+----------附加----------
+- [.绑定+ID] 绑定游戏ID到QQ（仅仅支持PC）
+- [.修改绑定+ID] 修改绑定的游戏id
+- [.2042门户+门户关键字] 查询门户服务器列表
+----------主机----------
+- [.2042xbox端战绩+ID] xbox战绩查询
+- [.2042ps端战绩+ID] ps战绩查询
+- [.PS绑定+ID] 绑定游戏ID到QQ（仅仅支持PS）
+- [.XBOX绑定+ID] 绑定游戏ID到QQ（仅仅支持XBOX）
+----------特色----------
+- [.上传图片] 上传自定义背景（需要请求bot管理员获得）
+- [.清空背景] 清空所有背景图片
+- [被动 入群检测] 检测新加群的EA ID
+- 门户 [`.2042门户 + 门户关键字 `] 查询关键字在线人数最多的服务器~~ 暂时出了点问题，查不到服务器或者直接报错，待修复
 ------------------------
 感谢帕科的支持 B站关注直播间：850164 谢谢喵
 '''.strip())
 # 限频器 30S冷却
-_freq_lmt = FreqLimiter(30)
+_freq_lmt = FreqLimiter(15)
 
 white_group = [630082682]
 
@@ -131,10 +130,25 @@ def str_filter(obj_str):
 
 
 async def query_data(player, platform):
-    url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}&skip_battlelog=false"
+    # url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=false&name={player}&platform={platform}&skip_battlelog=false"
+    url = f"https://proxy.sansenhoshi.top/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}&skip_battlelog=false"
     # url = f"https://api.gametools.network/bf2042/stats/?raw=false&format_values=true&name={player}&platform={platform}"
     headers = {
-        'accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Language': 'zh-HK,zh-CN;q=0.9,zh-TW;q=0.8,zh;q=0.7,en-US;q=0.6,en;q=0.5',
+        'Cache-Control': 'max-age=0',
+        'Connection': 'keep-alive',
+        'DNT': '1',
+        'If-Modified-Since': 'Sun, 18 Feb 2024 12:27:55 GMT',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"'
     }
     res = (False, "数据请求失败喵")
     retry_options = ExponentialRetry(attempts=2, exceptions=(aiohttp.ClientError,))
@@ -143,13 +157,15 @@ async def query_data(player, platform):
             async with r_session.get(url, headers=headers, timeout=15) as response:
                 rest = await response.text()
                 # rest = str_filter(rest)
+                result = json.loads(rest)
                 if response.status == 200:
                     result = json.loads(rest)
                     # 判断是否查询到玩家数据
-                    if 'userName' not in result:
-                        res = (False, "未查询到该玩家")
-                    else:
-                        res = (True, result)
+                    res = (True, result)
+                elif response.status == 404:
+                    res = (False, "未查询到该玩家")
+                else:
+                    res = (False, rest)
         except asyncio.TimeoutError as e:
             if e:
                 res = (False, f"请求超时：{e}")
